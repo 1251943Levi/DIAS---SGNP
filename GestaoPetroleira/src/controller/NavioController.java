@@ -123,6 +123,19 @@ public class NavioController {
         }
     }
 
+    @FXML
+    private void onTripulacao() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/resources/view/TripulacaoView.fxml"));
+            Stage stage = new Stage();
+            stage.setScene(new Scene(loader.load(), 900, 700));
+            stage.setTitle("DIAS — Gestão de Tripulação");
+            stage.show();
+        } catch (Exception e) {
+            mostrarErro(e.getMessage());
+        }
+    }
+
     private void limparFormulario() {
         txtNome.clear();
         txtImo.clear();
