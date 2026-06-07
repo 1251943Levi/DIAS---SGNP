@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="controller.ManutencaoController"
+      spacing="10" style="-fx-padding: 15;">
+
+    <Label fx:id="lblNavio" text="Navio: —" style="-fx-font-size: 16; -fx-font-weight: bold;"/>
+
+    <TableView fx:id="tabelaManutencoes" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="colId"        text="ID"        prefWidth="50"/>
+            <TableColumn fx:id="colNavio"     text="Navio"     prefWidth="150"/>
+            <TableColumn fx:id="colInicio"    text="Início"    prefWidth="100"/>
+            <TableColumn fx:id="colFim"       text="Fim"       prefWidth="100"/>
+            <TableColumn fx:id="colDescricao" text="Descrição" prefWidth="250"/>
+        </columns>
+    </TableView>
+
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <Label text="Descrição:"/>
+        <TextField fx:id="txtDescricao" prefWidth="350"/>
+    </HBox>
+
+    <HBox spacing="10">
+        <Button text="Registar Manutenção" onAction="#onRegistar"/>
+        <Button text="Concluir"            onAction="#onConcluir"/>
+        <Button text="Eliminar"            onAction="#onEliminar"/>
+    </HBox>
+
+</VBox>
