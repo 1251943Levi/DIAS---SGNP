@@ -39,6 +39,7 @@
         <Button text="Editar"      onAction="#onEditar"/>
         <Button text="Eliminar"    onAction="#onEliminar"/>
         <Button text="Manutenções" onAction="#onManutencoes"/>
+        <Button text="Tripulação"  onAction="#onTripulacao"/>
     </HBox>
 
 </VBox>
