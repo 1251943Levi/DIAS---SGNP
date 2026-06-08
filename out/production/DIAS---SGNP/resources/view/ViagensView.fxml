@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="controller.ViagemController"
+      spacing="10" style="-fx-padding: 15;">
+
+    <Label text="Gestao de Viagens" style="-fx-font-size: 16; -fx-font-weight: bold;"/>
+
+    <TableView fx:id="tabelaViagens" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="colId"      text="ID"      prefWidth="50"/>
+            <TableColumn fx:id="colNavio"   text="Navio"   prefWidth="150"/>
+            <TableColumn fx:id="colOrigem"  text="Origem"  prefWidth="140"/>
+            <TableColumn fx:id="colDestino" text="Destino" prefWidth="140"/>
+            <TableColumn fx:id="colPartida" text="Partida" prefWidth="100"/>
+            <TableColumn fx:id="colEstado"  text="Estado"  prefWidth="100"/>
+        </columns>
+    </TableView>
+
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <Label text="Navio:"/>
+        <ComboBox fx:id="cmbNavio" prefWidth="160"/>
+        <Label text="Origem:"/>
+        <ComboBox fx:id="cmbOrigem" prefWidth="140"/>
+        <Label text="Destino:"/>
+        <ComboBox fx:id="cmbDestino" prefWidth="140"/>
+        <Label text="Partida:"/>
+        <DatePicker fx:id="dtPartida"/>
+        <Button text="Criar Viagem" onAction="#onCriar"/>
+    </HBox>
+
+    <HBox spacing="10">
+        <Button text="Iniciar"   onAction="#onIniciar"/>
+        <Button text="Concluir"  onAction="#onConcluir"/>
+        <Button text="Cancelar"  onAction="#onCancelar"/>
+        <Separator orientation="VERTICAL"/>
+        <Button text="Associar Cargas"     onAction="#onAssociarCargas"/>
+        <Button text="Associar Tripulacao" onAction="#onAssociarTripulacao"/>
+    </HBox>
+
+</VBox>
