@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="controller.TripulacaoController">
+  <top>
+    <Label text="Gestão de Tripulação" style="-fx-font-size:18;-fx-padding:10;"/>
+  </top>
+
+  <center>
+    <TableView fx:id="tabelaTripulantes" onMouseClicked="#onSelecionar">
+      <columns>
+        <TableColumn fx:id="colId"         text="ID"          prefWidth="40"/>
+        <TableColumn fx:id="colNome"       text="Nome"        prefWidth="180"/>
+        <TableColumn fx:id="colMatricula"  text="Matrícula"   prefWidth="120"/>
+        <TableColumn fx:id="colFuncao"     text="Função"      prefWidth="110"/>
+        <TableColumn fx:id="colDisponivel" text="Disponível"  prefWidth="90"/>
+      </columns>
+    </TableView>
+  </center>
+
+  <bottom>
+    <VBox spacing="6" style="-fx-padding:10;">
+      <GridPane hgap="8" vgap="6">
+        <Label text="Nome:"       GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtNome" GridPane.rowIndex="0" GridPane.columnIndex="1" prefWidth="200"/>
+
+        <Label text="Matrícula:"  GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <TextField fx:id="txtMatricula" GridPane.rowIndex="1" GridPane.columnIndex="1" prefWidth="200"/>
+
+        <Label text="Função:"     GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <ComboBox fx:id="cmbFuncao" GridPane.rowIndex="2" GridPane.columnIndex="1" prefWidth="200"/>
+
+        <Label text="Disponível:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+        <CheckBox fx:id="chkDisponivel" selected="true" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+      </GridPane>
+
+      <HBox spacing="8">
+        <Button text="Adicionar"  onAction="#onAdicionar"/>
+        <Button text="Atualizar"  onAction="#onAtualizar"/>
+        <Button text="Eliminar"   onAction="#onEliminar"/>
+      </HBox>
+    </VBox>
+  </bottom>
+</BorderPane>

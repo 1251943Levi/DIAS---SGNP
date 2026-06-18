@@ -5,31 +5,23 @@ import dao.NavioDAO;
 import model.EstadoOperacional;
 import model.Manutencao;
 import model.Navio;
-
 import java.time.LocalDate;
 import java.util.List;
 
 public class NavioService {
-
     private final NavioDAO navioDAO = new NavioDAO();
     private final ManutencaoDAO manutencaoDAO = new ManutencaoDAO();
 
-    public List<Navio> listarNavios() {
-        return navioDAO.listarTodos();
-    }
+    public List<Navio> listarNavios() { return navioDAO.listarTodos(); }
 
     public void adicionarNavio(Navio navio) {
         navio.setEstadoOperacional(EstadoOperacional.ATIVO);
         navioDAO.inserir(navio);
     }
 
-    public void atualizarNavio(Navio navio) {
-        navioDAO.atualizar(navio);
-    }
+    public void atualizarNavio(Navio navio) { navioDAO.atualizar(navio); }
 
-    public void eliminarNavio(int id) {
-        navioDAO.eliminar(id);
-    }
+    public void eliminarNavio(int id) { navioDAO.eliminar(id); }
 
     public boolean podeIniciarViagem(Navio navio) {
         return navio.getEstadoOperacional() == EstadoOperacional.ATIVO;
@@ -49,6 +41,10 @@ public class NavioService {
         manutencaoDAO.atualizar(manutencao);
         manutencao.getNavio().setEstadoOperacional(EstadoOperacional.ATIVO);
         navioDAO.atualizar(manutencao.getNavio());
+    }
+
+    public void eliminarManutencao(int id) {
+        manutencaoDAO.eliminar(id);
     }
 
     public List<Manutencao> listarManutencoes(int idNavio) {

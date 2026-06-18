@@ -14,17 +14,18 @@ public class Main extends Application {
         abas.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
 
         abas.getTabs().addAll(
-                criarAba("Navios",  "/resources/view/NaviosView.fxml"),
-                criarAba("Viagens", "/resources/view/ViagensView.fxml")
+                criarAba("Navios",     "/resources/view/NaviosView.fxml"),
+                criarAba("Viagens",    "/resources/view/ViagemView.fxml"),
+                criarAba("Cargas",     "/resources/view/CargasView.fxml"),
+                criarAba("Tripulação", "/resources/view/TripulacaoView.fxml")
         );
 
-        Scene scene = new Scene(abas, 900, 600);
-        stage.setTitle("DIAS — Gestão de Navios e Viagens");
+        Scene scene = new Scene(abas, 1100, 700);
+        stage.setTitle("SGNP — Sistema de Gestão de Navios Petroleiros");
         stage.setScene(scene);
         stage.show();
     }
 
-    /** Carrega um FXML e devolve-o como conteúdo de um separador. */
     private Tab criarAba(String titulo, String fxml) throws Exception {
         Parent conteudo = FXMLLoader.load(getClass().getResource(fxml));
         return new Tab(titulo, conteudo);

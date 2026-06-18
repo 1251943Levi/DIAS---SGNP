@@ -1,28 +1,113 @@
 package dao;
 
 import model.Carga;
-
+import model.Porto;
+import model.TipoCarga;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class CargaDAO {
-    private Connection connection;
-    private TipoCargaDAO tipoCargaDAO;
-    public CargaDAO(Connection connection) {
-        this.connection = connection;
-        this.tipoCargaDAO = new TipoCargaDAO(connection);
+    private final TipoCargaDAO tipoCargaDAO = new TipoCargaDAO();
+    private final PortoDAO portoDAO = new PortoDAO();
+
+    public List<Carga> listarTodos() {
+        List<Carga> lista = new ArrayList<>();
+        try (Connection c = db.getConn(); Statement st = c.createStatement();
+             ResultSet rs = st.executeQuery(
+                 "SELECT id,designacao,id_tipo_carga,volume,peso,id_porto_carga,id_porto_descarga FROM dias.CARGA")) {
+            while (rs.next()) lista.add(mapear(rs));
+        } catch (Exception e) { e.printStackTrace(); }
+        return lista;
     }
-    public void inserir(Carga carga) throws SQLException {
-        String sql = "INSERT INTO carga (designacao, id_tipo_carga, volume, peso, porto_carga, porto_descarga) VALUES (?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            //stmt.setString(1, carga.getDesignacao());
-            stmt.setInt(2, carga.getTipoCarga().getId());
-            stmt.setDouble(3, carga.getVolume());
-            //stmt.setDouble(4, carga.getPeso());
-            //stmt.setString(5, carga.getPortoCarga());
-            //stmt.setString(6, carga.getPortoDescarga());
-            stmt.executeUpdate();
-        }
+
+    public List<Carga> listarPorViagem(int idViagem) {
+        List<Carga> lista = new ArrayList<>();
+        String sql = "SELECT c.id,c.designacao,c.id_tipo_carga,c.volume,c.peso,c.id_porto_carga,c.id_porto_descarga " +
+                     "FROM dias.CARGA c JOIN dias.VIAGEM_CARGA vc ON c.id=vc.id_carga WHERE vc.id_viagem=?";
+        try (Connection c = db.getConn(); PreparedStatement st = c.prepareStatement(sql)) {
+            st.setInt(1, idViagem);
+            try (ResultSet rs = st.executeQuery()) { while (rs.next()) lista.add(mapear(rs)); }
+        } catch (Exception e) { e.printStackTrace(); }
+        return lista;
+    }
+
+    public Carga buscarPorId(int id) {
+        try (Connection c = db.getConn();
+             PreparedStatement st = c.prepareStatement(
+                 "SELECT id,designacao,id_tipo_carga,volume,peso,id_porto_carga,id_porto_descarga FROM dias.CARGA WHERE id=?")) {
+            st.setInt(1, id);
+            try (ResultSet rs = st.executeQuery()) { if (rs.next()) return mapear(rs); }
+        } catch (Exception e) { e.printStackTrace(); }
+        return null;
+    }
+
+    public void inserir(Carga carga) {
+        String sql = "INSERT INTO dias.CARGA(designacao,id_tipo_carga,volume,peso,id_porto_carga,id_porto_descarga) VALUES(?,?,?,?,?,?)";
+        try (Connection c = db.getConn();
+             PreparedStatement st = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            st.setString(1, carga.getDesignacao()); st.setInt(2, carga.getTipoCarga().getId());
+            st.setDouble(3, carga.getVolume()); st.setDouble(4, carga.getPeso());
+            st.setInt(5, carga.getPortoCarga().getId()); st.setInt(6, carga.getPortoDescarga().getId());
+            st.executeUpdate();
+            try (ResultSet rs = st.getGeneratedKeys()) { if (rs.next()) carga.setId(rs.getInt(1)); }
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    public void atualizar(Carga carga) {
+        String sql = "UPDATE dias.CARGA SET designacao=?,id_tipo_carga=?,volume=?,peso=?,id_porto_carga=?,id_porto_descarga=? WHERE id=?";
+        try (Connection c = db.getConn(); PreparedStatement st = c.prepareStatement(sql)) {
+            st.setString(1, carga.getDesignacao()); st.setInt(2, carga.getTipoCarga().getId());
+            st.setDouble(3, carga.getVolume()); st.setDouble(4, carga.getPeso());
+            st.setInt(5, carga.getPortoCarga().getId()); st.setInt(6, carga.getPortoDescarga().getId());
+            st.setInt(7, carga.getId()); st.executeUpdate();
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    public void eliminar(int id) {
+        try (Connection c = db.getConn();
+             PreparedStatement st = c.prepareStatement("DELETE FROM dias.CARGA WHERE id=?")) {
+            st.setInt(1, id); st.executeUpdate();
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    public void associarAViagem(int idViagem, int idCarga) {
+        try (Connection c = db.getConn();
+             PreparedStatement st = c.prepareStatement("INSERT INTO dias.VIAGEM_CARGA(id_viagem,id_carga) VALUES(?,?)")) {
+            st.setInt(1, idViagem); st.setInt(2, idCarga); st.executeUpdate();
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    public void desassociarDaViagem(int idViagem, int idCarga) {
+        try (Connection c = db.getConn();
+             PreparedStatement st = c.prepareStatement("DELETE FROM dias.VIAGEM_CARGA WHERE id_viagem=? AND id_carga=?")) {
+            st.setInt(1, idViagem); st.setInt(2, idCarga); st.executeUpdate();
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    public int contarCargasPorViagem(int idViagem) {
+        try (Connection c = db.getConn();
+             PreparedStatement st = c.prepareStatement("SELECT COUNT(*) FROM dias.VIAGEM_CARGA WHERE id_viagem=?")) {
+            st.setInt(1, idViagem);
+            try (ResultSet rs = st.executeQuery()) { if (rs.next()) return rs.getInt(1); }
+        } catch (Exception e) { e.printStackTrace(); }
+        return 0;
+    }
+
+    public double pesotalPorViagem(int idViagem) {
+        String sql = "SELECT ISNULL(SUM(c.peso),0) FROM dias.CARGA c JOIN dias.VIAGEM_CARGA vc ON c.id=vc.id_carga WHERE vc.id_viagem=?";
+        try (Connection c = db.getConn(); PreparedStatement st = c.prepareStatement(sql)) {
+            st.setInt(1, idViagem);
+            try (ResultSet rs = st.executeQuery()) { if (rs.next()) return rs.getDouble(1); }
+        } catch (Exception e) { e.printStackTrace(); }
+        return 0;
+    }
+
+    private Carga mapear(ResultSet rs) throws Exception {
+        return new Carga(rs.getInt("id"), rs.getString("designacao"),
+                tipoCargaDAO.buscarPorId(rs.getInt("id_tipo_carga")),
+                rs.getDouble("volume"), rs.getDouble("peso"),
+                portoDAO.buscarPorId(rs.getInt("id_porto_carga")),
+                portoDAO.buscarPorId(rs.getInt("id_porto_descarga")));
     }
 }
