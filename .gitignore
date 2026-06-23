@@ -1,0 +1,12 @@
+# === IntelliJ / IDE ===
+.idea/
+*.iml
+
+# === Output de compilação ===
+out/
+build/
+bin/
+
+# === Sistema ===
+.DS_Store
+Thumbs.db
