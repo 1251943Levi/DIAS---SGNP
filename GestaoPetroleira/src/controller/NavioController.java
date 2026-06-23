@@ -124,10 +124,16 @@ public class NavioController {
         if (nome.isEmpty()) throw new Exception("Insira o nome do navio.");
         if (imo.isEmpty())  throw new Exception("Insira o código IMO.");
         if (cmbTipo.getValue() == null) throw new Exception("Selecione o tipo de navio.");
-        double cap  = Double.parseDouble(txtCapacidade.getText().trim());
-        int comp    = Integer.parseInt(txtCompartimentos.getText().trim());
+        double cap;
+        try { cap = Double.parseDouble(txtCapacidade.getText().trim()); }
+        catch (NumberFormatException ex) { throw new Exception("A capacidade máxima deve ser um número válido (ex.: 75000)."); }
+        int comp;
+        try { comp = Integer.parseInt(txtCompartimentos.getText().trim()); }
+        catch (NumberFormatException ex) { throw new Exception("O número de compartimentos deve ser um número inteiro válido (ex.: 4)."); }
         String band = txtBandeira.getText().trim();
-        int ano     = Integer.parseInt(txtAno.getText().trim());
+        int ano;
+        try { ano = Integer.parseInt(txtAno.getText().trim()); }
+        catch (NumberFormatException ex) { throw new Exception("O ano de fabrico deve ser um número inteiro válido (ex.: 2020)."); }
         if (band.isEmpty()) throw new Exception("Insira a bandeira.");
         return new Navio(id, nome, imo, cmbTipo.getValue(), cap, comp, band, ano, EstadoOperacional.ATIVO, null);
     }
@@ -144,6 +150,6 @@ public class NavioController {
 
     private void mostrarErro(String msg) {
         Alert a = new Alert(Alert.AlertType.ERROR);
-        a.setTitle("Erro"); a.setContentText(msg); a.showAndWait();
+        a.setTitle("Erro"); a.setHeaderText(null); a.setContentText(msg); a.showAndWait();
     }
 }
