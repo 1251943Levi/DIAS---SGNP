@@ -56,6 +56,11 @@ public class NavioController {
 
         cmbTipo.setItems(FXCollections.observableArrayList(tipoNavioDAO.listarTodos()));
         carregarNavios();
+
+        // Código IMO: prefixo "IMO" fixo + 7 dígitos digitados à mão
+        txtImo.setTextFormatter(new javafx.scene.control.TextFormatter<>(change ->
+                change.getControlNewText().matches("IMO\\d{0,7}") ? change : null));
+        txtImo.setText("IMO");
     }
 
     @FXML
@@ -122,7 +127,7 @@ public class NavioController {
         String nome = txtNome.getText().trim();
         String imo  = txtImo.getText().trim();
         if (nome.isEmpty()) throw new Exception("Insira o nome do navio.");
-        if (imo.isEmpty())  throw new Exception("Insira o código IMO.");
+        if (!imo.matches("IMO\\d{7}")) throw new Exception("O código IMO deve ser \"IMO\" seguido de 7 dígitos (ex.: IMO1234567).");
         if (cmbTipo.getValue() == null) throw new Exception("Selecione o tipo de navio.");
         double cap;
         try { cap = Double.parseDouble(txtCapacidade.getText().trim()); }
@@ -143,7 +148,7 @@ public class NavioController {
     }
 
     private void limparFormulario() {
-        txtNome.clear(); txtImo.clear(); cmbTipo.setValue(null);
+        txtNome.clear(); txtImo.setText("IMO"); cmbTipo.setValue(null);
         txtCapacidade.clear(); txtCompartimentos.clear(); txtBandeira.clear(); txtAno.clear();
         tabelaNavios.getSelectionModel().clearSelection();
     }
