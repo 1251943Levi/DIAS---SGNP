@@ -139,6 +139,7 @@ public class NavioController {
         int ano;
         try { ano = Integer.parseInt(txtAno.getText().trim()); }
         catch (NumberFormatException ex) { throw new Exception("O ano de fabrico deve ser um número inteiro válido (ex.: 2020)."); }
+        if (ano <= 1950) throw new Exception("O ano de fabrico deve ser superior a 1950.");
         if (band.isEmpty()) throw new Exception("Insira a bandeira.");
         return new Navio(id, nome, imo, cmbTipo.getValue(), cap, comp, band, ano, EstadoOperacional.ATIVO, null);
     }
