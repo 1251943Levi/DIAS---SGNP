@@ -14,7 +14,7 @@ public class ManutencaoDAO {
 
     public List<Manutencao> listarTodos() {
         List<Manutencao> lista = new ArrayList<>();
-        String sql = "SELECT id, id_navio, data_inicio, data_fim, descricao FROM dias.MANUTENCAO";
+        String sql = "SELECT id_manutencao AS id, id_navio, data_inicio, data_fim, descricao FROM dias.MANUTENCAO";
 
         try (Connection conn = db.getConn();
              Statement st = conn.createStatement();
@@ -30,7 +30,7 @@ public class ManutencaoDAO {
 
     public List<Manutencao> listarPorNavio(int idNavio) {
         List<Manutencao> lista = new ArrayList<>();
-        String sql = "SELECT id, id_navio, data_inicio, data_fim, descricao FROM dias.MANUTENCAO WHERE id_navio = ?";
+        String sql = "SELECT id_manutencao AS id, id_navio, data_inicio, data_fim, descricao FROM dias.MANUTENCAO WHERE id_navio = ?";
 
         try (Connection conn = db.getConn();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -47,7 +47,7 @@ public class ManutencaoDAO {
     }
 
     public Manutencao buscarPorId(int id) {
-        String sql = "SELECT id, id_navio, data_inicio, data_fim, descricao FROM dias.MANUTENCAO WHERE id = ?";
+        String sql = "SELECT id_manutencao AS id, id_navio, data_inicio, data_fim, descricao FROM dias.MANUTENCAO WHERE id_manutencao = ?";
 
         try (Connection conn = db.getConn();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -86,7 +86,7 @@ public class ManutencaoDAO {
     }
 
     public void atualizar(Manutencao m) {
-        String sql = "UPDATE dias.MANUTENCAO SET id_navio = ?, data_inicio = ?, data_fim = ?, descricao = ? WHERE id = ?";
+        String sql = "UPDATE dias.MANUTENCAO SET id_navio = ?, data_inicio = ?, data_fim = ?, descricao = ? WHERE id_manutencao = ?";
 
         try (Connection conn = db.getConn();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -105,7 +105,7 @@ public class ManutencaoDAO {
     }
 
     public void eliminar(int id) {
-        String sql = "DELETE FROM dias.MANUTENCAO WHERE id = ?";
+        String sql = "DELETE FROM dias.MANUTENCAO WHERE id_manutencao = ?";
 
         try (Connection conn = db.getConn();
              PreparedStatement stmt = conn.prepareStatement(sql)) {

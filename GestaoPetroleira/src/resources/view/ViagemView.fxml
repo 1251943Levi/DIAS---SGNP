@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="controller.ViagemController">
+  <top>
+    <Label text="Gestão de Viagens" style="-fx-font-size:18;-fx-padding:10;"/>
+  </top>
+
+  <center>
+    <SplitPane orientation="VERTICAL">
+
+      <!-- tabela principal + formulário criação -->
+      <VBox spacing="6" style="-fx-padding:8;">
+        <HBox spacing="8" alignment="CENTER_LEFT">
+          <Label text="Pesquisar:"/>
+          <TextField fx:id="txtPesquisa" promptText="navio, origem, destino ou estado..." prefWidth="320"/>
+        </HBox>
+        <TableView fx:id="tabelaViagens" prefHeight="220">
+          <columns>
+            <TableColumn fx:id="colId"      text="ID"       prefWidth="40"/>
+            <TableColumn fx:id="colNavio"   text="Navio"    prefWidth="160"/>
+            <TableColumn fx:id="colOrigem"  text="Origem"   prefWidth="120"/>
+            <TableColumn fx:id="colDestino" text="Destino"  prefWidth="120"/>
+            <TableColumn fx:id="colPartida" text="Partida"  prefWidth="100"/>
+            <TableColumn fx:id="colEstado"  text="Estado"   prefWidth="110"/>
+          </columns>
+        </TableView>
+
+        <GridPane hgap="8" vgap="4">
+          <Label text="Navio:"         GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+          <ComboBox fx:id="cmbNavio"   GridPane.rowIndex="0" GridPane.columnIndex="1" prefWidth="200"/>
+          <Label text="Origem:"        GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+          <ComboBox fx:id="cmbOrigem"  GridPane.rowIndex="1" GridPane.columnIndex="1" prefWidth="200"/>
+          <Label text="Destino:"       GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+          <ComboBox fx:id="cmbDestino" GridPane.rowIndex="2" GridPane.columnIndex="1" prefWidth="200"/>
+          <Label text="Data Partida:"  GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+          <DatePicker fx:id="dtPartida" GridPane.rowIndex="3" GridPane.columnIndex="1" prefWidth="200"/>
+        </GridPane>
+
+        <HBox spacing="8">
+          <Button text="Criar"     onAction="#onCriar"/>
+          <Button text="Iniciar"   onAction="#onIniciar"/>
+          <Button text="Concluir"  onAction="#onConcluir"/>
+          <Button text="Cancelar"  onAction="#onCancelar"/>
+        </HBox>
+      </VBox>
+
+      <!-- painéis de associação -->
+      <TabPane>
+
+        <!-- Cargas da Viagem -->
+        <Tab text="Cargas da Viagem" closable="false">
+          <VBox spacing="6" style="-fx-padding:8;">
+            <TableView fx:id="tabelaCargasViagem" prefHeight="140">
+              <columns>
+                <TableColumn fx:id="colCargaNome" text="Designação" prefWidth="200"/>
+                <TableColumn fx:id="colCargaTipo" text="Tipo"       prefWidth="130"/>
+                <TableColumn fx:id="colCargaPeso" text="Peso (t)"   prefWidth="90"/>
+              </columns>
+            </TableView>
+            <HBox spacing="8" alignment="CENTER_LEFT">
+              <ComboBox fx:id="cmbCarga" prefWidth="250"/>
+              <Button text="Associar Carga"    onAction="#onAssociarCarga"/>
+              <Button text="Desassociar Carga" onAction="#onDesassociarCarga"/>
+            </HBox>
+          </VBox>
+        </Tab>
+
+        <!-- Tripulação da Viagem -->
+        <Tab text="Tripulação da Viagem" closable="false">
+          <VBox spacing="6" style="-fx-padding:8;">
+            <TableView fx:id="tabelaTripulacaoViagem" prefHeight="140">
+              <columns>
+                <TableColumn fx:id="colTripNome"  text="Nome"   prefWidth="200"/>
+                <TableColumn fx:id="colTripFuncao" text="Função" prefWidth="120"/>
+              </columns>
+            </TableView>
+            <HBox spacing="8" alignment="CENTER_LEFT">
+              <ComboBox fx:id="cmbTripulante" prefWidth="200"/>
+              <ComboBox fx:id="cmbFuncaoTrip" prefWidth="130"/>
+              <Button text="Associar"    onAction="#onAssociarTripulante"/>
+              <Button text="Desassociar" onAction="#onDesassociarTripulante"/>
+            </HBox>
+          </VBox>
+        </Tab>
+
+      </TabPane>
+    </SplitPane>
+  </center>
+</BorderPane>

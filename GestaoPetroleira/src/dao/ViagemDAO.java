@@ -16,7 +16,8 @@ public class ViagemDAO {
     private final PortoDAO portoDAO = new PortoDAO();
 
     private static final String COLS =
-            "id, id_navio, id_porto_origem, id_porto_destino, data_partida, data_chegada, estado";
+            "id_viagem AS id, id_navio, id_porto_origem, id_porto_destino, " +
+            "data_partida, data_chegada_prevista AS data_chegada, estado";
 
     public List<Viagem> listarTodos() {
         List<Viagem> lista = new ArrayList<>();
@@ -53,7 +54,7 @@ public class ViagemDAO {
     }
 
     public Viagem buscarPorId(int id) {
-        String sql = "SELECT " + COLS + " FROM dias.VIAGEM WHERE id = ?";
+        String sql = "SELECT " + COLS + " FROM dias.VIAGEM WHERE id_viagem = ?";
 
         try (Connection conn = db.getConn();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -71,7 +72,7 @@ public class ViagemDAO {
 
     public void inserir(Viagem v) {
         String sql = "INSERT INTO dias.VIAGEM (id_navio, id_porto_origem, id_porto_destino, " +
-                "data_partida, data_chegada, estado) VALUES (?, ?, ?, ?, ?, ?)";
+                "data_partida, data_chegada_prevista, estado) VALUES (?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = db.getConn();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -96,7 +97,7 @@ public class ViagemDAO {
 
     public void atualizar(Viagem v) {
         String sql = "UPDATE dias.VIAGEM SET id_navio = ?, id_porto_origem = ?, id_porto_destino = ?, " +
-                "data_partida = ?, data_chegada = ?, estado = ? WHERE id = ?";
+                "data_partida = ?, data_chegada_prevista = ?, estado = ? WHERE id_viagem = ?";
 
         try (Connection conn = db.getConn();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -117,7 +118,7 @@ public class ViagemDAO {
     }
 
     public void eliminar(int id) {
-        String sql = "DELETE FROM dias.VIAGEM WHERE id = ?";
+        String sql = "DELETE FROM dias.VIAGEM WHERE id_viagem = ?";
 
         try (Connection conn = db.getConn();
              PreparedStatement stmt = conn.prepareStatement(sql)) {

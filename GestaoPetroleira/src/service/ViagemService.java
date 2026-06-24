@@ -2,11 +2,9 @@ package service;
 
 import dao.NavioDAO;
 import dao.PortoDAO;
+import dao.TripulacaoViagemDAO;
 import dao.ViagemDAO;
-import model.EstadoViagem;
-import model.Navio;
-import model.Porto;
-import model.Viagem;
+import model.*;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -16,6 +14,7 @@ public class ViagemService {
     private final ViagemDAO viagemDAO = new ViagemDAO();
     private final NavioDAO navioDAO = new NavioDAO();
     private final PortoDAO portoDAO = new PortoDAO();
+    private final TripulacaoViagemDAO tripulacaoViagemDAO = new TripulacaoViagemDAO();
 
     public List<Viagem> listarViagens() {
         return viagemDAO.listarTodos();
@@ -38,11 +37,20 @@ public class ViagemService {
         viagemDAO.inserir(v);
     }
 
-    /** PLANEADA -> EM_CURSO (so se o navio estiver ATIVO). */
+    /** PLANEADA -> EM_CURSO (so se o navio estiver ATIVO e houver tripulacao com capitao). */
     public void iniciarViagem(Viagem viagem) throws Exception {
         validarTransicao(viagem.getEstado(), EstadoViagem.EM_CURSO);
         if (!viagem.getNavio().podeIniciarViagem())
             throw new Exception("O navio nao esta ATIVO e nao pode iniciar viagem.");
+
+        // Regra: a viagem tem de ter tripulacao associada (com um capitao) antes de iniciar.
+        List<TripulacaoViagem> tripulacao = tripulacaoViagemDAO.listarPorViagem(viagem.getId());
+        if (tripulacao.isEmpty())
+            throw new Exception("A viagem nao tem tripulacao. Associe tripulantes antes de a iniciar.");
+        boolean temCapitao = tripulacao.stream().anyMatch(tv -> tv.getFuncao() == Funcao.CAPITAO);
+        if (!temCapitao)
+            throw new Exception("A viagem precisa de um capitao na tripulacao antes de iniciar.");
+
         viagem.setEstado(EstadoViagem.EM_CURSO);
         viagemDAO.atualizar(viagem);
     }

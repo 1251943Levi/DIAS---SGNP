@@ -1,88 +1,97 @@
 package controller;
 
-import model.Manutencao;
-import model.Navio;
-import service.NavioService;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.beans.property.SimpleStringProperty;
+import model.Manutencao;
+import model.Navio;
+import service.NavioService;
 
 import java.util.List;
 
 public class ManutencaoController {
 
-    @FXML private TableView<Manutencao> tabelaManutencoes;
+    @FXML private TableView<Manutencao>            tabelaManutencoes;
     @FXML private TableColumn<Manutencao, Integer> colId;
-    @FXML private TableColumn<Manutencao, String> colNavio;
-    @FXML private TableColumn<Manutencao, String> colInicio;
-    @FXML private TableColumn<Manutencao, String> colFim;
-    @FXML private TableColumn<Manutencao, String> colDescricao;
+    @FXML private TableColumn<Manutencao, String>  colNavio;
+    @FXML private TableColumn<Manutencao, String>  colInicio;
+    @FXML private TableColumn<Manutencao, String>  colFim;
+    @FXML private TableColumn<Manutencao, String>  colDescricao;
 
-    @FXML private TextField txtDescricao;
-    @FXML private Label lblNavio;
+    @FXML private ComboBox<Navio> cmbNavio;
+    @FXML private TextField       txtDescricao;
 
     private final NavioService navioService = new NavioService();
     private Navio navioAtual;
 
     public void setNavio(Navio navio) {
         this.navioAtual = navio;
-        lblNavio.setText("Navio: " + navio.getNome());
+        if (cmbNavio != null) cmbNavio.setValue(navio);
         carregarManutencoes();
     }
 
     @FXML
     public void initialize() {
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
-        colNavio.setCellValueFactory(data ->
-                new SimpleStringProperty(data.getValue().getNavio().getNome()));
-        colInicio.setCellValueFactory(data ->
-                new SimpleStringProperty(data.getValue().getDataInicio().toString()));
-        colFim.setCellValueFactory(data ->
-                new SimpleStringProperty(data.getValue().getDataFim() != null
-                        ? data.getValue().getDataFim().toString() : "Em curso"));
+        colNavio.setCellValueFactory(d ->
+                new SimpleStringProperty(d.getValue().getNavio().getNome()));
+        colInicio.setCellValueFactory(d ->
+                new SimpleStringProperty(d.getValue().getDataInicio().toString()));
+        colFim.setCellValueFactory(d ->
+                new SimpleStringProperty(d.getValue().getDataFim() != null ? d.getValue().getDataFim().toString() : "Em curso"));
         colDescricao.setCellValueFactory(new PropertyValueFactory<>("descricao"));
-    }
 
-    private void carregarManutencoes() {
-        if (navioAtual == null) return;
-        tabelaManutencoes.setItems(FXCollections.observableArrayList(
-                navioService.listarManutencoes(navioAtual.getId())));
+        if (cmbNavio != null)
+            cmbNavio.setItems(FXCollections.observableArrayList(navioService.listarNavios()));
     }
 
     @FXML
     private void onRegistar() {
-        if (navioAtual == null) return;
+        Navio navio = navioAtual != null ? navioAtual :
+                (cmbNavio != null ? cmbNavio.getValue() : null);
+        if (navio == null) { mostrarErro("Selecione um navio."); return; }
+        String desc = txtDescricao.getText().trim();
+        if (desc.isEmpty()) { mostrarErro("Insira uma descrição."); return; }
         try {
-            navioService.registarManutencao(navioAtual, txtDescricao.getText());
+            navioService.registarManutencao(navio, desc);
             txtDescricao.clear();
             carregarManutencoes();
-        } catch (Exception e) {
-            mostrarErro(e.getMessage());
-        }
+        } catch (Exception e) { mostrarErro(e.getMessage()); }
     }
 
     @FXML
     private void onConcluir() {
-        Manutencao s = tabelaManutencoes.getSelectionModel().getSelectedItem();
-        if (s == null) { mostrarErro("Selecione uma manutenção para concluir."); return; }
-        if (!s.emCurso()) { mostrarErro("Esta manutenção já foi concluída."); return; }
-        navioService.concluirManutencao(s);
+        Manutencao sel = tabelaManutencoes.getSelectionModel().getSelectedItem();
+        if (sel == null) { mostrarErro("Selecione uma manutenção."); return; }
+        navioService.concluirManutencao(sel);
         carregarManutencoes();
     }
 
     @FXML
     private void onEliminar() {
-        Manutencao s = tabelaManutencoes.getSelectionModel().getSelectedItem();
-        if (s == null) { mostrarErro("Selecione uma manutenção para eliminar."); return; }
+        Manutencao sel = tabelaManutencoes.getSelectionModel().getSelectedItem();
+        if (sel == null) { mostrarErro("Selecione uma manutenção."); return; }
+        navioService.eliminarManutencao(sel.getId());   // BUG FIX: was missing this call
         carregarManutencoes();
     }
 
+    private void carregarManutencoes() {
+        List<Manutencao> lista;
+        if (navioAtual != null) {
+            lista = navioService.listarManutencoes(navioAtual.getId());
+        } else {
+            // se não há navio fixo, mostra manutenções de todos
+            lista = new java.util.ArrayList<>();
+            for (Navio n : navioService.listarNavios())
+                lista.addAll(navioService.listarManutencoes(n.getId()));
+        }
+        tabelaManutencoes.setItems(FXCollections.observableArrayList(lista));
+    }
+
     private void mostrarErro(String msg) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Erro");
-        alert.setContentText(msg);
-        alert.showAndWait();
+        Alert a = new Alert(Alert.AlertType.ERROR);
+        a.setTitle("Erro"); a.setContentText(msg); a.showAndWait();
     }
 }

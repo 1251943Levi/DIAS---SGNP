@@ -2,15 +2,23 @@ package dao;
 
 import model.TipoNavio;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
 public class TipoNavioDAO {
 
+    // 0 AS capacidade_maxima: o tipo de navio deixou de guardar capacidade
+    // (passou a ter 'descricao'); o valor fica a 0 para o modelo continuar valido.
+    private static final String COLS =
+            "id_tipo_navio AS id, designacao AS nome, 0 AS capacidade_maxima, max_cargas";
+
     public List<TipoNavio> listarTodos() {
         List<TipoNavio> lista = new ArrayList<>();
-        String sql = "SELECT id, nome, capacidade_maxima, max_cargas FROM dias.TIPO_NAVIO";
+        String sql = "SELECT " + COLS + " FROM dias.TIPO_NAVIO";
 
         try (Connection conn = db.getConn();
              Statement st = conn.createStatement();
@@ -25,7 +33,7 @@ public class TipoNavioDAO {
     }
 
     public TipoNavio buscarPorId(int id) {
-        String sql = "SELECT id, nome, capacidade_maxima, max_cargas FROM dias.TIPO_NAVIO WHERE id = ?";
+        String sql = "SELECT " + COLS + " FROM dias.TIPO_NAVIO WHERE id_tipo_navio = ?";
 
         try (Connection conn = db.getConn();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -42,14 +50,13 @@ public class TipoNavioDAO {
     }
 
     public void inserir(TipoNavio t) {
-        String sql = "INSERT INTO dias.TIPO_NAVIO (nome, capacidade_maxima, max_cargas) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO dias.TIPO_NAVIO (designacao, max_cargas) VALUES (?, ?)";
 
         try (Connection conn = db.getConn();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setString(1, t.getNome());
-            stmt.setDouble(2, t.getCapacidadeMaxima());
-            stmt.setInt(3, t.getMaxCargas());
+            stmt.setInt(2, t.getMaxCargas());
             stmt.executeUpdate();
 
             try (ResultSet rs = stmt.getGeneratedKeys()) {
@@ -62,15 +69,14 @@ public class TipoNavioDAO {
     }
 
     public void atualizar(TipoNavio t) {
-        String sql = "UPDATE dias.TIPO_NAVIO SET nome = ?, capacidade_maxima = ?, max_cargas = ? WHERE id = ?";
+        String sql = "UPDATE dias.TIPO_NAVIO SET designacao = ?, max_cargas = ? WHERE id_tipo_navio = ?";
 
         try (Connection conn = db.getConn();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, t.getNome());
-            stmt.setDouble(2, t.getCapacidadeMaxima());
-            stmt.setInt(3, t.getMaxCargas());
-            stmt.setInt(4, t.getId());
+            stmt.setInt(2, t.getMaxCargas());
+            stmt.setInt(3, t.getId());
             stmt.executeUpdate();
 
         } catch (Exception e) {
@@ -79,7 +85,7 @@ public class TipoNavioDAO {
     }
 
     public void eliminar(int id) {
-        String sql = "DELETE FROM dias.TIPO_NAVIO WHERE id = ?";
+        String sql = "DELETE FROM dias.TIPO_NAVIO WHERE id_tipo_navio = ?";
 
         try (Connection conn = db.getConn();
              PreparedStatement stmt = conn.prepareStatement(sql)) {

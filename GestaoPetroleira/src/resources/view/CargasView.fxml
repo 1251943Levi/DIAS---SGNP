@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="controller.CargaController">
+  <top>
+    <Label text="Gestão de Cargas" style="-fx-font-size:18;-fx-padding:10;"/>
+  </top>
+
+  <center>
+    <TabPane>
+
+      <!-- ── Tipos de Carga ── -->
+      <Tab text="Tipos de Carga" closable="false">
+        <VBox spacing="8" style="-fx-padding:10;">
+          <TableView fx:id="tabelaTiposCarga">
+            <columns>
+              <TableColumn fx:id="colTcId"    text="ID"          prefWidth="40"/>
+              <TableColumn fx:id="colTcNome"  text="Nome"        prefWidth="180"/>
+              <TableColumn fx:id="colTcProps" text="Propriedades" prefWidth="220"/>
+            </columns>
+          </TableView>
+          <GridPane hgap="8" vgap="6">
+            <Label text="Nome:"       GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <TextField fx:id="txtTcNome" GridPane.rowIndex="0" GridPane.columnIndex="1" prefWidth="200"/>
+            <CheckBox fx:id="chkInflamavel" text="Inflamável"  GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <CheckBox fx:id="chkCorrosiva"  text="Corrosiva"   GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+            <CheckBox fx:id="chkToxica"     text="Tóxica"      GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+          </GridPane>
+          <HBox spacing="8">
+            <Button text="Adicionar Tipo" onAction="#onAdicionarTipoCarga"/>
+            <Button text="Eliminar Tipo"  onAction="#onEliminarTipoCarga"/>
+          </HBox>
+        </VBox>
+      </Tab>
+
+      <!-- ── Cargas ── -->
+      <Tab text="Cargas" closable="false">
+        <VBox spacing="8" style="-fx-padding:10;">
+          <HBox spacing="8" alignment="CENTER_LEFT">
+            <Label text="Pesquisar:"/>
+            <TextField fx:id="txtPesquisaCarga" promptText="designação, tipo ou porto..." prefWidth="320"/>
+          </HBox>
+          <TableView fx:id="tabelaCargas">
+            <columns>
+              <TableColumn fx:id="colCId"        text="ID"           prefWidth="40"/>
+              <TableColumn fx:id="colCDesig"     text="Designação"   prefWidth="180"/>
+              <TableColumn fx:id="colCTipo"      text="Tipo"         prefWidth="120"/>
+              <TableColumn fx:id="colCPeso"      text="Peso (t)"     prefWidth="80"/>
+              <TableColumn fx:id="colCVolume"    text="Volume (m³)"  prefWidth="90"/>
+              <TableColumn fx:id="colCPortoCarga" text="Porto Carga" prefWidth="120"/>
+              <TableColumn fx:id="colCPortoDesc"  text="Porto Descarga" prefWidth="120"/>
+            </columns>
+          </TableView>
+          <GridPane hgap="8" vgap="6">
+            <Label text="Designação:"    GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <TextField fx:id="txtDesignacao" GridPane.rowIndex="0" GridPane.columnIndex="1" prefWidth="200"/>
+            <Label text="Tipo de Carga:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <ComboBox fx:id="cmbTipoCarga" GridPane.rowIndex="1" GridPane.columnIndex="1" prefWidth="200"/>
+            <Label text="Peso (t):"      GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+            <TextField fx:id="txtPeso"   GridPane.rowIndex="2" GridPane.columnIndex="1" prefWidth="200"/>
+            <Label text="Volume (m³):"   GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+            <TextField fx:id="txtVolume" GridPane.rowIndex="3" GridPane.columnIndex="1" prefWidth="200"/>
+            <Label text="Porto Carga:"   GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+            <ComboBox fx:id="cmbPortoCarga" GridPane.rowIndex="4" GridPane.columnIndex="1" prefWidth="200"/>
+            <Label text="Porto Descarga:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+            <ComboBox fx:id="cmbPortoDescarga" GridPane.rowIndex="5" GridPane.columnIndex="1" prefWidth="200"/>
+          </GridPane>
+          <HBox spacing="8">
+            <Button text="Adicionar" onAction="#onAdicionarCarga"/>
+            <Button text="Eliminar"  onAction="#onEliminarCarga"/>
+          </HBox>
+        </VBox>
+      </Tab>
+
+      <!-- ── Compatibilidades ── -->
+      <Tab text="Compatibilidades" closable="false">
+        <VBox spacing="8" style="-fx-padding:10;">
+          <TableView fx:id="tabelaCompat">
+            <columns>
+              <TableColumn fx:id="colCompNavio" text="Tipo Navio" prefWidth="200"/>
+              <TableColumn fx:id="colCompCarga" text="Tipo Carga" prefWidth="200"/>
+            </columns>
+          </TableView>
+          <GridPane hgap="8" vgap="6">
+            <Label text="Tipo Navio:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <ComboBox fx:id="cmbTipoNavio" GridPane.rowIndex="0" GridPane.columnIndex="1" prefWidth="200"/>
+            <Label text="Tipo Carga:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <ComboBox fx:id="cmbTipoCargaCompat" GridPane.rowIndex="1" GridPane.columnIndex="1" prefWidth="200"/>
+          </GridPane>
+          <HBox spacing="8">
+            <Button text="Adicionar" onAction="#onAdicionarCompatibilidade"/>
+            <Button text="Eliminar"  onAction="#onEliminarCompatibilidade"/>
+          </HBox>
+        </VBox>
+      </Tab>
+
+    </TabPane>
+  </center>
+</BorderPane>
