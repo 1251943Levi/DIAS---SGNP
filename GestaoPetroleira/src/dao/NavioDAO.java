@@ -12,8 +12,8 @@ public class NavioDAO {
     private final TipoNavioDAO tipoNavioDAO = new TipoNavioDAO();
 
     private static final String COLS =
-        "id, nome, codigo_imo, id_tipo_navio, capacidade_maxima, num_compartimentos, " +
-        "bandeira, ano_fabrico, estado_operacional, id_porto_atual";
+        "id_navio AS id, nome, codigo_imo, id_tipo_navio, capacidade_max AS capacidade_maxima, " +
+        "numero_tanques AS num_compartimentos, bandeira, ano_fabrico, estado_operacional, id_porto_atual";
 
     public List<Navio> listarTodos() {
         List<Navio> lista = new ArrayList<>();
@@ -26,7 +26,7 @@ public class NavioDAO {
 
     public Navio buscarPorId(int id) {
         try (Connection c = db.getConn();
-             PreparedStatement st = c.prepareStatement("SELECT " + COLS + " FROM dias.NAVIO WHERE id=?")) {
+             PreparedStatement st = c.prepareStatement("SELECT " + COLS + " FROM dias.NAVIO WHERE id_navio=?")) {
             st.setInt(1, id);
             try (ResultSet rs = st.executeQuery()) { if (rs.next()) return mapear(rs); }
         } catch (Exception e) { e.printStackTrace(); }
@@ -34,8 +34,8 @@ public class NavioDAO {
     }
 
     public void inserir(Navio n) {
-        String sql = "INSERT INTO dias.NAVIO(nome,codigo_imo,id_tipo_navio,capacidade_maxima," +
-                     "num_compartimentos,bandeira,ano_fabrico,estado_operacional,id_porto_atual) VALUES(?,?,?,?,?,?,?,?,?)";
+        String sql = "INSERT INTO dias.NAVIO(nome,codigo_imo,id_tipo_navio,capacidade_max," +
+                     "numero_tanques,bandeira,ano_fabrico,estado_operacional,id_porto_atual) VALUES(?,?,?,?,?,?,?,?,?)";
         try (Connection c = db.getConn();
              PreparedStatement st = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             st.setString(1, n.getNome()); st.setString(2, n.getCodigoImo());
@@ -49,8 +49,8 @@ public class NavioDAO {
     }
 
     public void atualizar(Navio n) {
-        String sql = "UPDATE dias.NAVIO SET nome=?,codigo_imo=?,id_tipo_navio=?,capacidade_maxima=?," +
-                     "num_compartimentos=?,bandeira=?,ano_fabrico=?,estado_operacional=?,id_porto_atual=? WHERE id=?";
+        String sql = "UPDATE dias.NAVIO SET nome=?,codigo_imo=?,id_tipo_navio=?,capacidade_max=?," +
+                     "numero_tanques=?,bandeira=?,ano_fabrico=?,estado_operacional=?,id_porto_atual=? WHERE id_navio=?";
         try (Connection c = db.getConn(); PreparedStatement st = c.prepareStatement(sql)) {
             st.setString(1, n.getNome()); st.setString(2, n.getCodigoImo());
             st.setInt(3, n.getTipoNavio().getId()); st.setDouble(4, n.getCapacidadeMaxima());
@@ -63,7 +63,7 @@ public class NavioDAO {
 
     public void eliminar(int id) {
         try (Connection c = db.getConn();
-             PreparedStatement st = c.prepareStatement("DELETE FROM dias.NAVIO WHERE id=?")) {
+             PreparedStatement st = c.prepareStatement("DELETE FROM dias.NAVIO WHERE id_navio=?")) {
             st.setInt(1, id); st.executeUpdate();
         } catch (Exception e) { e.printStackTrace(); }
     }

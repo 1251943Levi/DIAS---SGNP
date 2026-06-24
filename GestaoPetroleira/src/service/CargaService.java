@@ -38,6 +38,8 @@ public class CargaService {
     /**
      * Regra 1: O tipo de carga deve ser compatível com o tipo do navio.
      * Regra 2: A capacidade máxima do navio não pode ser excedida.
+     * Regra 3: O número de cargas por viagem não pode exceder o máximo
+     *          definido pelo tipo de navio.
      */
     public void associarCargaAViagem(Viagem viagem, Carga carga) throws Exception {
         Navio navio = navioDAO.buscarPorId(viagem.getNavio().getId());
@@ -50,6 +52,14 @@ public class CargaService {
             throw new Exception("Tipo de carga '" + carga.getTipoCarga().getNome() +
                     "' não é compatível com o tipo de navio '" + navio.getTipoNavio().getNome() + "'.");
 
+        // Regra 3 – número máximo de cargas por viagem (definido pelo tipo de navio)
+        int maxCargas = navio.getTipoNavio().getMaxCargas();
+        int cargasAtuais = cargaDAO.contarCargasPorViagem(viagem.getId());
+        if (limiteCargasAtingido(maxCargas, cargasAtuais))
+            throw new Exception(String.format(
+                    "Limite de cargas atingido. O tipo de navio '%s' permite no máximo %d carga(s) por viagem.",
+                    navio.getTipoNavio().getNome(), maxCargas));
+
         // Regra 2 – capacidade
         double pesoAtual = cargaDAO.pesotalPorViagem(viagem.getId());
         if (pesoAtual + carga.getPeso() > navio.getCapacidadeMaxima())
@@ -58,6 +68,15 @@ public class CargaService {
                     pesoAtual, carga.getPeso(), navio.getCapacidadeMaxima()));
 
         cargaDAO.associarAViagem(viagem.getId(), carga.getId());
+    }
+
+    /**
+     * Decide se o limite de cargas por viagem já foi atingido.
+     * Extraído como método puro para permitir teste unitário sem base de dados.
+     * Um {@code maxCargas <= 0} significa "sem limite definido".
+     */
+    static boolean limiteCargasAtingido(int maxCargas, int cargasAtuais) {
+        return maxCargas > 0 && cargasAtuais >= maxCargas;
     }
 
     public void desassociarCargaDaViagem(int idViagem, int idCarga) {
@@ -77,7 +96,7 @@ public class CargaService {
         compatibilidadeDAO.inserir(comp);
     }
 
-    public void eliminarCompatibilidade(int id) {
-        compatibilidadeDAO.eliminar(id);
+    public void eliminarCompatibilidade(int idTipoNavio, int idTipoCarga) {
+        compatibilidadeDAO.eliminar(idTipoNavio, idTipoCarga);
     }
 }

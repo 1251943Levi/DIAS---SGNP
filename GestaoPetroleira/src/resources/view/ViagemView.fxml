@@ -13,6 +13,10 @@
 
       <!-- tabela principal + formulário criação -->
       <VBox spacing="6" style="-fx-padding:8;">
+        <HBox spacing="8" alignment="CENTER_LEFT">
+          <Label text="Pesquisar:"/>
+          <TextField fx:id="txtPesquisa" promptText="navio, origem, destino ou estado..." prefWidth="320"/>
+        </HBox>
         <TableView fx:id="tabelaViagens" prefHeight="220">
           <columns>
             <TableColumn fx:id="colId"      text="ID"       prefWidth="40"/>

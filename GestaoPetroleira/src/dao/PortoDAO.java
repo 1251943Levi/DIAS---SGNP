@@ -2,7 +2,10 @@ package dao;
 
 import model.Porto;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,7 +13,7 @@ public class PortoDAO {
 
     public List<Porto> listarTodos() {
         List<Porto> lista = new ArrayList<>();
-        String sql = "SELECT id, nome, pais, codigo FROM dias.PORTO";
+        String sql = "SELECT id_porto AS id, nome, pais, codigo FROM dias.PORTO";
 
         try (Connection conn = db.getConn();
              Statement st = conn.createStatement();
@@ -25,7 +28,7 @@ public class PortoDAO {
     }
 
     public Porto buscarPorId(int id) {
-        String sql = "SELECT id, nome, pais, codigo FROM dias.PORTO WHERE id = ?";
+        String sql = "SELECT id_porto AS id, nome, pais, codigo FROM dias.PORTO WHERE id_porto = ?";
 
         try (Connection conn = db.getConn();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -62,7 +65,7 @@ public class PortoDAO {
     }
 
     public void atualizar(Porto p) {
-        String sql = "UPDATE dias.PORTO SET nome = ?, pais = ?, codigo = ? WHERE id = ?";
+        String sql = "UPDATE dias.PORTO SET nome = ?, pais = ?, codigo = ? WHERE id_porto = ?";
 
         try (Connection conn = db.getConn();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -79,7 +82,7 @@ public class PortoDAO {
     }
 
     public void eliminar(int id) {
-        String sql = "DELETE FROM dias.PORTO WHERE id = ?";
+        String sql = "DELETE FROM dias.PORTO WHERE id_porto = ?";
 
         try (Connection conn = db.getConn();
              PreparedStatement stmt = conn.prepareStatement(sql)) {

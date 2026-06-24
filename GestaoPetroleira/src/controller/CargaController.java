@@ -4,6 +4,8 @@ import dao.PortoDAO;
 import dao.TipoNavioDAO;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -41,6 +43,9 @@ public class CargaController {
     @FXML private TextField          txtVolume;
     @FXML private ComboBox<Porto>    cmbPortoCarga;
     @FXML private ComboBox<Porto>    cmbPortoDescarga;
+    @FXML private TextField          txtPesquisaCarga;
+
+    private final ObservableList<Carga> dadosCargas = FXCollections.observableArrayList();
 
     // ── COMPATIBILIDADE tab ────────────────────────────────────────────────────
     @FXML private TableView<Compatibilidade> tabelaCompat;
@@ -83,9 +88,30 @@ public class CargaController {
         cmbPortoDescarga.setItems(FXCollections.observableArrayList(portos));
         cmbTipoNavio.setItems(FXCollections.observableArrayList(tipoNavioDAO.listarTodos()));
 
+        // Pesquisa/filtro sobre a tabela de cargas
+        FilteredList<Carga> filtradas = new FilteredList<>(dadosCargas, c -> true);
+        txtPesquisaCarga.textProperty().addListener((obs, anterior, texto) ->
+                filtradas.setPredicate(cargaCorresponde(texto)));
+        tabelaCargas.setItems(filtradas);
+
         carregarTiposCarga();
         carregarCargas();
         carregarCompatibilidades();
+    }
+
+    /** Pesquisa, sem distinguir maiúsculas, em designação, tipo e portos de carga/descarga. */
+    private java.util.function.Predicate<Carga> cargaCorresponde(String texto) {
+        String q = texto == null ? "" : texto.trim().toLowerCase();
+        return c -> {
+            if (q.isEmpty()) return true;
+            String tipo = c.getTipoCarga() != null ? c.getTipoCarga().getNome() : "";
+            String pc = c.getPortoCarga() != null ? c.getPortoCarga().getNome() : "";
+            String pd = c.getPortoDescarga() != null ? c.getPortoDescarga().getNome() : "";
+            return c.getDesignacao().toLowerCase().contains(q)
+                    || tipo.toLowerCase().contains(q)
+                    || pc.toLowerCase().contains(q)
+                    || pd.toLowerCase().contains(q);
+        };
     }
 
     // ── TIPO_CARGA actions ────────────────────────────────────────────────────
@@ -158,7 +184,7 @@ public class CargaController {
     private void onEliminarCompatibilidade() {
         Compatibilidade sel = tabelaCompat.getSelectionModel().getSelectedItem();
         if (sel == null) { mostrarErro("Selecione uma compatibilidade."); return; }
-        cargaService.eliminarCompatibilidade(sel.getId());
+        cargaService.eliminarCompatibilidade(sel.getTipoNavio().getId(), sel.getTipoCarga().getId());
         carregarCompatibilidades();
     }
 
@@ -171,7 +197,7 @@ public class CargaController {
     }
 
     private void carregarCargas() {
-        tabelaCargas.setItems(FXCollections.observableArrayList(cargaService.listarCargas()));
+        dadosCargas.setAll(cargaService.listarCargas());
     }
 
     private void carregarCompatibilidades() {

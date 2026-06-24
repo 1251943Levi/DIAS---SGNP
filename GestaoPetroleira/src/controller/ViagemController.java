@@ -2,6 +2,8 @@ package controller;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -10,8 +12,6 @@ import service.CargaService;
 import service.NavioService;
 import service.TripulacaoService;
 import service.ViagemService;
-
-import java.util.List;
 
 public class ViagemController {
 
@@ -29,6 +29,10 @@ public class ViagemController {
     @FXML private ComboBox<Porto>  cmbOrigem;
     @FXML private ComboBox<Porto>  cmbDestino;
     @FXML private DatePicker       dtPartida;
+
+    @FXML private TextField        txtPesquisa;
+
+    private final ObservableList<Viagem> dadosViagens = FXCollections.observableArrayList();
 
     // ── painel associar cargas ─────────────────────────────────────────────────
     @FXML private TableView<Carga>            tabelaCargasViagem;
@@ -79,7 +83,25 @@ public class ViagemController {
         tabelaViagens.getSelectionModel().selectedItemProperty().addListener(
                 (obs, old, sel) -> onViagemSelecionada(sel));
 
+        // Pesquisa/filtro sobre a tabela de viagens
+        FilteredList<Viagem> filtradas = new FilteredList<>(dadosViagens, v -> true);
+        txtPesquisa.textProperty().addListener((obs, anterior, texto) ->
+                filtradas.setPredicate(viagemCorresponde(texto)));
+        tabelaViagens.setItems(filtradas);
+
         carregarViagens();
+    }
+
+    /** Pesquisa, sem distinguir maiúsculas, em navio, portos e estado da viagem. */
+    private java.util.function.Predicate<Viagem> viagemCorresponde(String texto) {
+        String q = texto == null ? "" : texto.trim().toLowerCase();
+        return v -> {
+            if (q.isEmpty()) return true;
+            return v.getNavio().getNome().toLowerCase().contains(q)
+                    || v.getPortoOrigem().getNome().toLowerCase().contains(q)
+                    || v.getPortoDestino().getNome().toLowerCase().contains(q)
+                    || v.getEstado().name().toLowerCase().contains(q);
+        };
     }
 
     private void onViagemSelecionada(Viagem v) {
@@ -98,7 +120,7 @@ public class ViagemController {
     }
 
     private void carregarViagens() {
-        tabelaViagens.setItems(FXCollections.observableArrayList(viagemService.listarViagens()));
+        dadosViagens.setAll(viagemService.listarViagens());
     }
 
     @FXML

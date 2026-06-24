@@ -2,8 +2,11 @@ package dao;
 
 import model.Compatibilidade;
 import model.TipoCarga;
-import model.TipoNavio;
-import java.sql.*;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,7 +17,7 @@ public class CompatibilidadeDAO {
     public List<Compatibilidade> listarTodos() {
         List<Compatibilidade> lista = new ArrayList<>();
         try (Connection c = db.getConn(); Statement st = c.createStatement();
-             ResultSet rs = st.executeQuery("SELECT id,id_tipo_navio,id_tipo_carga FROM dias.COMPATIBILIDADE")) {
+             ResultSet rs = st.executeQuery("SELECT id_tipo_navio,id_tipo_carga FROM dias.COMPATIBILIDADE")) {
             while (rs.next()) lista.add(mapear(rs));
         } catch (Exception e) { e.printStackTrace(); }
         return lista;
@@ -22,8 +25,8 @@ public class CompatibilidadeDAO {
 
     public List<TipoCarga> listarCargasCompativeis(int idTipoNavio) {
         List<TipoCarga> lista = new ArrayList<>();
-        String sql = "SELECT tc.id,tc.nome,tc.inflamavel,tc.corrosiva,tc.toxica " +
-                     "FROM dias.TIPO_CARGA tc JOIN dias.COMPATIBILIDADE c ON tc.id=c.id_tipo_carga " +
+        String sql = "SELECT tc.id_tipo_carga AS id,tc.designacao AS nome,tc.inflamavel,tc.corrosiva,tc.toxica " +
+                     "FROM dias.TIPO_CARGA tc JOIN dias.COMPATIBILIDADE c ON tc.id_tipo_carga=c.id_tipo_carga " +
                      "WHERE c.id_tipo_navio=?";
         try (Connection c = db.getConn(); PreparedStatement st = c.prepareStatement(sql)) {
             st.setInt(1, idTipoNavio);
@@ -50,23 +53,23 @@ public class CompatibilidadeDAO {
     public void inserir(Compatibilidade comp) {
         try (Connection c = db.getConn();
              PreparedStatement st = c.prepareStatement(
-                 "INSERT INTO dias.COMPATIBILIDADE(id_tipo_navio,id_tipo_carga) VALUES(?,?)",
-                 Statement.RETURN_GENERATED_KEYS)) {
+                 "INSERT INTO dias.COMPATIBILIDADE(id_tipo_navio,id_tipo_carga) VALUES(?,?)")) {
             st.setInt(1, comp.getTipoNavio().getId()); st.setInt(2, comp.getTipoCarga().getId());
             st.executeUpdate();
-            try (ResultSet rs = st.getGeneratedKeys()) { if (rs.next()) comp.setId(rs.getInt(1)); }
         } catch (Exception e) { e.printStackTrace(); }
     }
 
-    public void eliminar(int id) {
+    /** Chave primaria composta: elimina pela combinacao tipo de navio + tipo de carga. */
+    public void eliminar(int idTipoNavio, int idTipoCarga) {
         try (Connection c = db.getConn();
-             PreparedStatement st = c.prepareStatement("DELETE FROM dias.COMPATIBILIDADE WHERE id=?")) {
-            st.setInt(1, id); st.executeUpdate();
+             PreparedStatement st = c.prepareStatement(
+                 "DELETE FROM dias.COMPATIBILIDADE WHERE id_tipo_navio=? AND id_tipo_carga=?")) {
+            st.setInt(1, idTipoNavio); st.setInt(2, idTipoCarga); st.executeUpdate();
         } catch (Exception e) { e.printStackTrace(); }
     }
 
     private Compatibilidade mapear(ResultSet rs) throws Exception {
-        return new Compatibilidade(rs.getInt("id"),
+        return new Compatibilidade(0,
                 tipoNavioDAO.buscarPorId(rs.getInt("id_tipo_navio")),
                 tipoCargaDAO.buscarPorId(rs.getInt("id_tipo_carga")));
     }

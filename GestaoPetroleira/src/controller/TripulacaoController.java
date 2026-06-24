@@ -2,10 +2,13 @@ package controller;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import model.*;
+import model.Funcao;
+import model.Tripulante;
 import service.TripulacaoService;
 
 public class TripulacaoController {
@@ -21,6 +24,9 @@ public class TripulacaoController {
     @FXML private TextField            txtMatricula;
     @FXML private ComboBox<Funcao>     cmbFuncao;
     @FXML private CheckBox             chkDisponivel;
+    @FXML private TextField            txtPesquisa;
+
+    private final ObservableList<Tripulante> dadosTripulantes = FXCollections.observableArrayList();
 
     private final TripulacaoService tripulacaoService = new TripulacaoService();
 
@@ -36,6 +42,12 @@ public class TripulacaoController {
 
         cmbFuncao.setItems(FXCollections.observableArrayList(Funcao.values()));
         chkDisponivel.setSelected(true);
+
+        // Pesquisa/filtro sobre a tabela de tripulantes
+        FilteredList<Tripulante> filtrados = new FilteredList<>(dadosTripulantes, t -> true);
+        txtPesquisa.textProperty().addListener((obs, anterior, texto) ->
+                filtrados.setPredicate(tripulanteCorresponde(texto)));
+        tabelaTripulantes.setItems(filtrados);
 
         carregarTripulantes();
 
@@ -101,8 +113,21 @@ public class TripulacaoController {
     }
 
     private void carregarTripulantes() {
-        tabelaTripulantes.setItems(
-                FXCollections.observableArrayList(tripulacaoService.listarTripulantes()));
+        dadosTripulantes.setAll(tripulacaoService.listarTripulantes());
+    }
+
+    /** Pesquisa, sem distinguir maiúsculas, em nome, matrícula, função e disponibilidade. */
+    private java.util.function.Predicate<Tripulante> tripulanteCorresponde(String texto) {
+        String q = texto == null ? "" : texto.trim().toLowerCase();
+        return t -> {
+            if (q.isEmpty()) return true;
+            String funcao = t.getFuncao() != null ? t.getFuncao().name() : "";
+            String disp = t.isDisponivel() ? "sim disponível" : "não indisponível";
+            return t.getNome().toLowerCase().contains(q)
+                    || t.getNumeroMatricula().toLowerCase().contains(q)
+                    || funcao.toLowerCase().contains(q)
+                    || disp.contains(q);
+        };
     }
 
     private void limparFormulario() {

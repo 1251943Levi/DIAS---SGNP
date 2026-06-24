@@ -4,16 +4,18 @@ import dao.PortoDAO;
 import dao.TipoNavioDAO;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
-import model.*;
+import model.EstadoOperacional;
+import model.Navio;
+import model.TipoNavio;
 import service.NavioService;
-
-import java.util.List;
 
 public class NavioController {
 
@@ -36,6 +38,10 @@ public class NavioController {
     @FXML private TextField          txtBandeira;
     @FXML private TextField          txtAno;
     @FXML private ComboBox<EstadoOperacional> cmbEstado;
+
+    @FXML private TextField          txtPesquisa;
+
+    private final ObservableList<Navio> dadosNavios = FXCollections.observableArrayList();
 
     private final NavioService  navioService  = new NavioService();
     private final TipoNavioDAO  tipoNavioDAO  = new TipoNavioDAO();
@@ -61,10 +67,16 @@ public class NavioController {
         cmbEstado.setItems(FXCollections.observableArrayList(EstadoOperacional.ATIVO, EstadoOperacional.INATIVO));
         cmbEstado.setValue(EstadoOperacional.ATIVO);
 
+        // Pesquisa/filtro sobre a tabela de navios
+        FilteredList<Navio> filtrados = new FilteredList<>(dadosNavios, n -> true);
+        txtPesquisa.textProperty().addListener((obs, anterior, texto) ->
+                filtrados.setPredicate(navioCorresponde(texto)));
+        tabelaNavios.setItems(filtrados);
+
         carregarNavios();
 
         // Código IMO: prefixo "IMO" fixo + 7 dígitos digitados à mão
-        txtImo.setTextFormatter(new javafx.scene.control.TextFormatter<>(change ->
+        txtImo.setTextFormatter(new TextFormatter<>(change ->
                 change.getControlNewText().matches("IMO\\d{0,7}") ? change : null));
         txtImo.setText("IMO");
     }
@@ -130,9 +142,13 @@ public class NavioController {
             stage.setTitle("Manutenções — " + sel.getNome());
             ManutencaoController ctrl = loader.getController();
             ctrl.setNavio(sel);
+            // Janela modal: bloqueia a janela principal enquanto esta aberta,
+            // garantindo uma so janela ativa de cada vez (evita sobrecarregar a BD).
+            stage.initOwner(tabelaNavios.getScene().getWindow());
+            stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
             // Ao fechar a janela de manutenções, recarrega a tabela para refletir o estado atualizado
             stage.setOnHidden(e -> carregarNavios());
-            stage.show();
+            stage.showAndWait();
         } catch (Exception e) { mostrarErro("Erro ao abrir manutenções: " + e.getMessage()); }
     }
 
@@ -202,7 +218,21 @@ public class NavioController {
     }
 
     private void carregarNavios() {
-        tabelaNavios.setItems(FXCollections.observableArrayList(navioService.listarNavios()));
+        dadosNavios.setAll(navioService.listarNavios());
+    }
+
+    /** Pesquisa, sem distinguir maiúsculas, em nome, IMO, tipo, bandeira e estado. */
+    private java.util.function.Predicate<Navio> navioCorresponde(String texto) {
+        String q = texto == null ? "" : texto.trim().toLowerCase();
+        return n -> {
+            if (q.isEmpty()) return true;
+            String tipo = n.getTipoNavio() != null ? n.getTipoNavio().getNome() : "";
+            return n.getNome().toLowerCase().contains(q)
+                    || n.getCodigoImo().toLowerCase().contains(q)
+                    || tipo.toLowerCase().contains(q)
+                    || n.getBandeira().toLowerCase().contains(q)
+                    || n.getEstadoOperacional().name().toLowerCase().contains(q);
+        };
     }
 
     private void limparFormulario() {

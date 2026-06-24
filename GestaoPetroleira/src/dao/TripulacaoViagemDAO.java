@@ -4,7 +4,10 @@ import model.Funcao;
 import model.TripulacaoViagem;
 import model.Tripulante;
 import model.Viagem;
-import java.sql.*;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,7 +19,7 @@ public class TripulacaoViagemDAO {
         List<TripulacaoViagem> lista = new ArrayList<>();
         try (Connection c = db.getConn();
              PreparedStatement st = c.prepareStatement(
-                 "SELECT id,id_viagem,id_tripulante,funcao FROM dias.TRIPULACAO_VIAGEM WHERE id_viagem=?")) {
+                 "SELECT id_viagem,id_tripulante,funcao FROM dias.TRIPULACAO_VIAGEM WHERE id_viagem=?")) {
             st.setInt(1, idViagem);
             try (ResultSet rs = st.executeQuery()) { while (rs.next()) lista.add(mapear(rs)); }
         } catch (Exception e) { e.printStackTrace(); }
@@ -26,11 +29,9 @@ public class TripulacaoViagemDAO {
     public void inserir(TripulacaoViagem tv) {
         try (Connection c = db.getConn();
              PreparedStatement st = c.prepareStatement(
-                 "INSERT INTO dias.TRIPULACAO_VIAGEM(id_viagem,id_tripulante,funcao) VALUES(?,?,?)",
-                 Statement.RETURN_GENERATED_KEYS)) {
+                 "INSERT INTO dias.TRIPULACAO_VIAGEM(id_viagem,id_tripulante,funcao) VALUES(?,?,?)")) {
             st.setInt(1, tv.getViagem().getId()); st.setInt(2, tv.getTripulante().getId());
             st.setString(3, tv.getFuncao().name()); st.executeUpdate();
-            try (ResultSet rs = st.getGeneratedKeys()) { if (rs.next()) tv.setId(rs.getInt(1)); }
         } catch (Exception e) { e.printStackTrace(); }
     }
 
@@ -65,6 +66,6 @@ public class TripulacaoViagemDAO {
     private TripulacaoViagem mapear(ResultSet rs) throws Exception {
         Viagem v = viagemDAO.buscarPorId(rs.getInt("id_viagem"));
         Tripulante t = tripulanteDAO.buscarPorId(rs.getInt("id_tripulante"));
-        return new TripulacaoViagem(rs.getInt("id"), v, t, Funcao.valueOf(rs.getString("funcao")));
+        return new TripulacaoViagem(0, v, t, Funcao.valueOf(rs.getString("funcao")));
     }
 }

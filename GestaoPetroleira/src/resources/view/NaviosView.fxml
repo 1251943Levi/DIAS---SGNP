@@ -5,7 +5,13 @@
 <BorderPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="controller.NavioController">
   <top>
-    <Label text="Gestão de Navios" style="-fx-font-size:18;-fx-padding:10;"/>
+    <VBox>
+      <Label text="Gestão de Navios" style="-fx-font-size:18;-fx-padding:10;"/>
+      <HBox spacing="8" alignment="CENTER_LEFT" style="-fx-padding:0 10 10 10;">
+        <Label text="Pesquisar:"/>
+        <TextField fx:id="txtPesquisa" promptText="nome, IMO, tipo, bandeira ou estado..." prefWidth="340"/>
+      </HBox>
+    </VBox>
   </top>
 
   <center>

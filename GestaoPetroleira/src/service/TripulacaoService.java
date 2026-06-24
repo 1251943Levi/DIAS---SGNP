@@ -2,7 +2,11 @@ package service;
 
 import dao.TripulacaoViagemDAO;
 import dao.TripulanteDAO;
-import model.*;
+import model.Funcao;
+import model.TripulacaoViagem;
+import model.Tripulante;
+import model.Viagem;
+
 import java.util.List;
 
 public class TripulacaoService {
