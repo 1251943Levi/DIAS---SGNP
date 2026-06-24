@@ -38,17 +38,20 @@ public class TripulacaoController {
         chkDisponivel.setSelected(true);
 
         carregarTripulantes();
+
+        // Matrícula gerada automaticamente: MAT + próximo número
+        txtMatricula.setEditable(false);
+        txtMatricula.setText(proximaMatricula());
     }
 
     @FXML
     private void onAdicionar() {
         try {
             String nome = txtNome.getText().trim();
-            String mat  = txtMatricula.getText().trim();
             if (nome.isEmpty()) throw new Exception("Insira o nome do tripulante.");
-            if (mat.isEmpty())  throw new Exception("Insira o número de matrícula.");
             if (cmbFuncao.getValue() == null) throw new Exception("Selecione a função.");
 
+            String mat = proximaMatricula();   // MAT + próximo número, automático
             Tripulante t = new Tripulante(0, nome, mat, cmbFuncao.getValue(), chkDisponivel.isSelected());
             tripulacaoService.adicionarTripulante(t);
             limparFormulario();
@@ -103,9 +106,22 @@ public class TripulacaoController {
     }
 
     private void limparFormulario() {
-        txtNome.clear(); txtMatricula.clear();
+        txtNome.clear(); txtMatricula.setText(proximaMatricula());
         cmbFuncao.setValue(null); chkDisponivel.setSelected(true);
         tabelaTripulantes.getSelectionModel().clearSelection();
+    }
+
+    /** Gera a próxima matrícula no formato MAT + (maior número existente + 1). */
+    private String proximaMatricula() {
+        int max = 1000;
+        for (Tripulante t : tripulacaoService.listarTripulantes()) {
+            String m = t.getNumeroMatricula();
+            if (m != null && m.matches("MAT\\d+")) {
+                int n = Integer.parseInt(m.substring(3));
+                if (n > max) max = n;
+            }
+        }
+        return "MAT" + (max + 1);
     }
 
     private void mostrarErro(String msg) {
