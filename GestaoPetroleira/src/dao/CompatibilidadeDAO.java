@@ -2,11 +2,8 @@ package dao;
 
 import model.Compatibilidade;
 import model.TipoCarga;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import model.TipoNavio;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 

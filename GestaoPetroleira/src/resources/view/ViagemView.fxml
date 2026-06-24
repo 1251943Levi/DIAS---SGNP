@@ -24,6 +24,7 @@
             <TableColumn fx:id="colOrigem"  text="Origem"   prefWidth="120"/>
             <TableColumn fx:id="colDestino" text="Destino"  prefWidth="120"/>
             <TableColumn fx:id="colPartida" text="Partida"  prefWidth="100"/>
+            <TableColumn fx:id="colChegada" text="Chegada Prev." prefWidth="110"/>
             <TableColumn fx:id="colEstado"  text="Estado"   prefWidth="110"/>
           </columns>
         </TableView>
@@ -37,6 +38,8 @@
           <ComboBox fx:id="cmbDestino" GridPane.rowIndex="2" GridPane.columnIndex="1" prefWidth="200"/>
           <Label text="Data Partida:"  GridPane.rowIndex="3" GridPane.columnIndex="0"/>
           <DatePicker fx:id="dtPartida" GridPane.rowIndex="3" GridPane.columnIndex="1" prefWidth="200"/>
+          <Label text="Data Chegada Prevista:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+          <DatePicker fx:id="dtChegada" GridPane.rowIndex="4" GridPane.columnIndex="1" prefWidth="200"/>
         </GridPane>
 
         <HBox spacing="8">

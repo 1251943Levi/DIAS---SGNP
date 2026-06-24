@@ -1,11 +1,9 @@
 package dao;
 
 import model.Carga;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import model.Porto;
+import model.TipoCarga;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 

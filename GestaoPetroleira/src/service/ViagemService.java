@@ -4,7 +4,12 @@ import dao.NavioDAO;
 import dao.PortoDAO;
 import dao.TripulacaoViagemDAO;
 import dao.ViagemDAO;
-import model.*;
+import model.EstadoViagem;
+import model.Funcao;
+import model.Navio;
+import model.Porto;
+import model.TripulacaoViagem;
+import model.Viagem;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -24,16 +29,24 @@ public class ViagemService {
         return portoDAO.listarTodos();
     }
 
-    /** Cria uma viagem PLANEADA, garantindo que o navio nao tem outra viagem ativa. */
+    /** Cria uma viagem PLANEADA sem data de chegada prevista. */
     public void criarViagem(Navio navio, Porto origem, Porto destino, LocalDate dataPartida) throws Exception {
+        criarViagem(navio, origem, destino, dataPartida, null);
+    }
+
+    /** Cria uma viagem PLANEADA, garantindo que o navio nao tem outra viagem ativa. */
+    public void criarViagem(Navio navio, Porto origem, Porto destino,
+                            LocalDate dataPartida, LocalDate dataChegada) throws Exception {
         if (navio == null) throw new Exception("Selecione um navio.");
         if (origem == null || destino == null) throw new Exception("Selecione os portos de origem e destino.");
         if (origem.getId() == destino.getId()) throw new Exception("Origem e destino devem ser diferentes.");
         if (dataPartida == null) throw new Exception("Indique a data de partida.");
+        if (dataChegada != null && dataChegada.isBefore(dataPartida))
+            throw new Exception("A data de chegada não pode ser anterior à data de partida.");
 
         garantirSemViagemAtiva(navio.getId());
 
-        Viagem v = new Viagem(0, navio, origem, destino, dataPartida, null, EstadoViagem.PLANEADA);
+        Viagem v = new Viagem(0, navio, origem, destino, dataPartida, dataChegada, EstadoViagem.PLANEADA);
         viagemDAO.inserir(v);
     }
 

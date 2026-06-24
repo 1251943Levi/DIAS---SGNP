@@ -2,11 +2,7 @@ package service;
 
 import dao.TripulacaoViagemDAO;
 import dao.TripulanteDAO;
-import model.Funcao;
-import model.TripulacaoViagem;
-import model.Tripulante;
-import model.Viagem;
-
+import model.*;
 import java.util.List;
 
 public class TripulacaoService {
@@ -64,5 +60,10 @@ public class TripulacaoService {
     public boolean temCapitao(int idViagem) {
         return listarTripulacaoDaViagem(idViagem).stream()
                 .anyMatch(tv -> tv.getFuncao() == Funcao.CAPITAO);
+    }
+
+    /** Historico de participacao em viagens de um tripulante. */
+    public List<TripulacaoViagem> historicoDoTripulante(int idTripulante) {
+        return tripulacaoViagemDAO.listarPorTripulante(idTripulante);
     }
 }
