@@ -44,6 +44,8 @@
 
         <Label text="Ano Fabrico:"    GridPane.rowIndex="3" GridPane.columnIndex="0"/>
         <TextField fx:id="txtAno"    GridPane.rowIndex="3" GridPane.columnIndex="1" prefWidth="180"/>
+        <Label text="Estado:"         GridPane.rowIndex="3" GridPane.columnIndex="2"/>
+        <ComboBox fx:id="cmbEstado"  GridPane.rowIndex="3" GridPane.columnIndex="3" prefWidth="120"/>
       </GridPane>
 
       <HBox spacing="8">
@@ -51,6 +53,7 @@
         <Button text="Atualizar"   onAction="#onAtualizar"/>
         <Button text="Eliminar"    onAction="#onEliminar"/>
         <Button text="Manutenções" onAction="#onManutencao"/>
+        <Button text="Novo Tipo"   onAction="#onNovoTipo"/>
       </HBox>
     </VBox>
   </bottom>

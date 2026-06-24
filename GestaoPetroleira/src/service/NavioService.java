@@ -15,7 +15,7 @@ public class NavioService {
     public List<Navio> listarNavios() { return navioDAO.listarTodos(); }
 
     public void adicionarNavio(Navio navio) {
-        navio.setEstadoOperacional(EstadoOperacional.ATIVO);
+        if (navio.getEstadoOperacional() == null) navio.setEstadoOperacional(EstadoOperacional.ATIVO);
         navioDAO.inserir(navio);
     }
 

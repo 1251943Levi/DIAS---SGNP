@@ -35,6 +35,7 @@ public class NavioController {
     @FXML private TextField          txtCompartimentos;
     @FXML private TextField          txtBandeira;
     @FXML private TextField          txtAno;
+    @FXML private ComboBox<EstadoOperacional> cmbEstado;
 
     private final NavioService  navioService  = new NavioService();
     private final TipoNavioDAO  tipoNavioDAO  = new TipoNavioDAO();
@@ -55,6 +56,11 @@ public class NavioController {
                 new SimpleStringProperty(d.getValue().getEstadoOperacional().name()));
 
         cmbTipo.setItems(FXCollections.observableArrayList(tipoNavioDAO.listarTodos()));
+
+        // Estado: permite Ativar / Desativar o navio
+        cmbEstado.setItems(FXCollections.observableArrayList(EstadoOperacional.ATIVO, EstadoOperacional.INATIVO));
+        cmbEstado.setValue(EstadoOperacional.ATIVO);
+
         carregarNavios();
 
         // Código IMO: prefixo "IMO" fixo + 7 dígitos digitados à mão
@@ -79,7 +85,9 @@ public class NavioController {
         if (sel == null) { mostrarErro("Selecione um navio."); return; }
         try {
             Navio n = navioDoFormulario(sel.getId());
-            n.setEstadoOperacional(sel.getEstadoOperacional());
+            // Navio em manutenção mantém-se EM_MANUTENCAO; o estado só muda ao concluir a manutenção
+            if (sel.getEstadoOperacional() == EstadoOperacional.EM_MANUTENCAO)
+                n.setEstadoOperacional(EstadoOperacional.EM_MANUTENCAO);
             navioService.atualizarNavio(n);
             limparFormulario();
             carregarNavios();
@@ -105,6 +113,9 @@ public class NavioController {
         txtCompartimentos.setText(String.valueOf(sel.getNumCompartimentos()));
         txtBandeira.setText(sel.getBandeira());
         txtAno.setText(String.valueOf(sel.getAnoFabrico()));
+        cmbEstado.setValue(sel.getEstadoOperacional());
+        // Em manutenção: não permitir mudar o estado (só ao concluir a manutenção)
+        cmbEstado.setDisable(sel.getEstadoOperacional() == EstadoOperacional.EM_MANUTENCAO);
     }
 
     @FXML
@@ -119,8 +130,51 @@ public class NavioController {
             stage.setTitle("Manutenções — " + sel.getNome());
             ManutencaoController ctrl = loader.getController();
             ctrl.setNavio(sel);
+            // Ao fechar a janela de manutenções, recarrega a tabela para refletir o estado atualizado
+            stage.setOnHidden(e -> carregarNavios());
             stage.show();
         } catch (Exception e) { mostrarErro("Erro ao abrir manutenções: " + e.getMessage()); }
+    }
+
+    @FXML
+    private void onNovoTipo() {
+        Dialog<ButtonType> dlg = new Dialog<>();
+        dlg.setTitle("Novo Tipo de Navio");
+        dlg.setHeaderText("Insira os dados do novo tipo de navio");
+        ButtonType btnOk = new ButtonType("Adicionar", ButtonBar.ButtonData.OK_DONE);
+        dlg.getDialogPane().getButtonTypes().addAll(btnOk, ButtonType.CANCEL);
+
+        TextField tfNome = new TextField(); tfNome.setPromptText("Nome (ex.: Aframax)");
+        TextField tfCap  = new TextField(); tfCap.setPromptText("Capacidade máxima (t)");
+        TextField tfMax  = new TextField(); tfMax.setPromptText("Nº máximo de cargas");
+
+        javafx.scene.layout.GridPane gp = new javafx.scene.layout.GridPane();
+        gp.setHgap(8); gp.setVgap(8);
+        gp.add(new Label("Nome:"), 0, 0);                gp.add(tfNome, 1, 0);
+        gp.add(new Label("Capacidade máx (t):"), 0, 1);  gp.add(tfCap, 1, 1);
+        gp.add(new Label("Nº máx. cargas:"), 0, 2);      gp.add(tfMax, 1, 2);
+        dlg.getDialogPane().setContent(gp);
+
+        dlg.showAndWait().ifPresent(resp -> {
+            if (resp != btnOk) return;
+            try {
+                String nome = tfNome.getText().trim();
+                if (nome.isEmpty()) throw new Exception("Insira o nome do tipo de navio.");
+                double cap;
+                try { cap = Double.parseDouble(tfCap.getText().trim()); }
+                catch (NumberFormatException ex) { throw new Exception("A capacidade máxima deve ser um número válido (ex.: 75000)."); }
+                int maxc;
+                try { maxc = Integer.parseInt(tfMax.getText().trim()); }
+                catch (NumberFormatException ex) { throw new Exception("O número máximo de cargas deve ser um número inteiro válido (ex.: 4)."); }
+
+                TipoNavio novo = new TipoNavio(0, nome, cap, maxc);
+                tipoNavioDAO.inserir(novo);
+                cmbTipo.setItems(FXCollections.observableArrayList(tipoNavioDAO.listarTodos()));
+                cmbTipo.setValue(novo);   // já fica selecionado para o navio
+            } catch (Exception e) {
+                mostrarErro(e.getMessage());
+            }
+        });
     }
 
     private Navio navioDoFormulario(int id) throws Exception {
@@ -140,8 +194,11 @@ public class NavioController {
         try { ano = Integer.parseInt(txtAno.getText().trim()); }
         catch (NumberFormatException ex) { throw new Exception("O ano de fabrico deve ser um número inteiro válido (ex.: 2020)."); }
         if (ano <= 1950) throw new Exception("O ano de fabrico deve ser superior a 1950.");
+        if (ano > java.time.Year.now().getValue()) throw new Exception("O ano de fabrico não pode ser superior ao ano atual (" + java.time.Year.now().getValue() + ").");
         if (band.isEmpty()) throw new Exception("Insira a bandeira.");
-        return new Navio(id, nome, imo, cmbTipo.getValue(), cap, comp, band, ano, EstadoOperacional.ATIVO, null);
+        if (!band.matches("[\\p{L} ]+")) throw new Exception("A bandeira só pode conter letras.");
+        EstadoOperacional estado = cmbEstado.getValue() != null ? cmbEstado.getValue() : EstadoOperacional.ATIVO;
+        return new Navio(id, nome, imo, cmbTipo.getValue(), cap, comp, band, ano, estado, null);
     }
 
     private void carregarNavios() {
@@ -151,6 +208,8 @@ public class NavioController {
     private void limparFormulario() {
         txtNome.clear(); txtImo.setText("IMO"); cmbTipo.setValue(null);
         txtCapacidade.clear(); txtCompartimentos.clear(); txtBandeira.clear(); txtAno.clear();
+        cmbEstado.setValue(EstadoOperacional.ATIVO);
+        cmbEstado.setDisable(false);
         tabelaNavios.getSelectionModel().clearSelection();
     }
 
