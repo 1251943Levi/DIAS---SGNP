@@ -13,6 +13,8 @@ import service.NavioService;
 import service.TripulacaoService;
 import service.ViagemService;
 
+import java.util.List;
+
 public class ViagemController {
 
     // ── tabela viagens ─────────────────────────────────────────────────────────
@@ -22,6 +24,7 @@ public class ViagemController {
     @FXML private TableColumn<Viagem, String>   colOrigem;
     @FXML private TableColumn<Viagem, String>   colDestino;
     @FXML private TableColumn<Viagem, String>   colPartida;
+    @FXML private TableColumn<Viagem, String>   colChegada;
     @FXML private TableColumn<Viagem, String>   colEstado;
 
     // ── formulário nova viagem ─────────────────────────────────────────────────
@@ -29,6 +32,7 @@ public class ViagemController {
     @FXML private ComboBox<Porto>  cmbOrigem;
     @FXML private ComboBox<Porto>  cmbDestino;
     @FXML private DatePicker       dtPartida;
+    @FXML private DatePicker       dtChegada;
 
     @FXML private TextField        txtPesquisa;
 
@@ -62,6 +66,8 @@ public class ViagemController {
         colOrigem.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getPortoOrigem().getNome()));
         colDestino.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getPortoDestino().getNome()));
         colPartida.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getDataPartida().toString()));
+        colChegada.setCellValueFactory(d -> new SimpleStringProperty(
+                d.getValue().getDataChegada() != null ? d.getValue().getDataChegada().toString() : "—"));
         colEstado.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getEstado().name()));
 
         if (colCargaNome  != null) colCargaNome .setCellValueFactory(new PropertyValueFactory<>("designacao"));
@@ -127,7 +133,7 @@ public class ViagemController {
     private void onCriar() {
         try {
             viagemService.criarViagem(cmbNavio.getValue(), cmbOrigem.getValue(),
-                    cmbDestino.getValue(), dtPartida.getValue());
+                    cmbDestino.getValue(), dtPartida.getValue(), dtChegada.getValue());
             limparFormulario();
             carregarViagens();
         } catch (Exception e) { mostrarErro(e.getMessage()); }
@@ -200,7 +206,7 @@ public class ViagemController {
     // ── helpers ────────────────────────────────────────────────────────────────
     private void limparFormulario() {
         cmbNavio.setValue(null); cmbOrigem.setValue(null);
-        cmbDestino.setValue(null); dtPartida.setValue(null);
+        cmbDestino.setValue(null); dtPartida.setValue(null); dtChegada.setValue(null);
     }
 
     private void mostrarErro(String msg) {

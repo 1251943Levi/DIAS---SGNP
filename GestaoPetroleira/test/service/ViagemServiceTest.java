@@ -59,6 +59,14 @@ class ViagemServiceTest {
         assertTrue(e.getMessage().contains("data"));
     }
 
+    @Test
+    void criarViagemComChegadaAntesDaPartidaFalha() {
+        Exception e = assertThrows(Exception.class,
+                () -> service.criarViagem(navio(EstadoOperacional.ATIVO), porto(1), porto(2),
+                        LocalDate.of(2026, 6, 10), LocalDate.of(2026, 6, 5)));
+        assertTrue(e.getMessage().contains("anterior"));
+    }
+
     // ── Matriz de transicoes de estado ───────────────────────────────────────
 
     @Test

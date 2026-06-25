@@ -12,10 +12,10 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
-import model.EstadoOperacional;
-import model.Navio;
-import model.TipoNavio;
+import model.*;
 import service.NavioService;
+
+import java.util.List;
 
 public class NavioController {
 
@@ -76,7 +76,7 @@ public class NavioController {
         carregarNavios();
 
         // Código IMO: prefixo "IMO" fixo + 7 dígitos digitados à mão
-        txtImo.setTextFormatter(new TextFormatter<>(change ->
+        txtImo.setTextFormatter(new javafx.scene.control.TextFormatter<>(change ->
                 change.getControlNewText().matches("IMO\\d{0,7}") ? change : null));
         txtImo.setText("IMO");
     }

@@ -7,9 +7,10 @@ import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import model.Funcao;
-import model.Tripulante;
+import model.*;
 import service.TripulacaoService;
+
+import java.util.List;
 
 public class TripulacaoController {
 
@@ -147,6 +148,34 @@ public class TripulacaoController {
             }
         }
         return "MAT" + (max + 1);
+    }
+
+    @FXML
+    private void onHistorico() {
+        Tripulante sel = tabelaTripulantes.getSelectionModel().getSelectedItem();
+        if (sel == null) { mostrarErro("Selecione um tripulante."); return; }
+
+        List<TripulacaoViagem> historico = tripulacaoService.historicoDoTripulante(sel.getId());
+
+        StringBuilder sb = new StringBuilder();
+        if (historico.isEmpty()) {
+            sb.append("Este tripulante ainda não participou em nenhuma viagem.");
+        } else {
+            for (TripulacaoViagem tv : historico) {
+                sb.append(tv.getViagem()).append("  —  Função: ").append(tv.getFuncao()).append("\n");
+            }
+        }
+
+        TextArea area = new TextArea(sb.toString());
+        area.setEditable(false);
+        area.setWrapText(true);
+        area.setPrefSize(560, 240);
+
+        Alert a = new Alert(Alert.AlertType.INFORMATION);
+        a.setTitle("Histórico de viagens");
+        a.setHeaderText("Tripulante: " + sel.getNome() + " (" + sel.getNumeroMatricula() + ")");
+        a.getDialogPane().setContent(area);
+        a.showAndWait();
     }
 
     private void mostrarErro(String msg) {

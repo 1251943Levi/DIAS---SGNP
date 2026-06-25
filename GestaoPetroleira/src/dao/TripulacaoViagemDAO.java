@@ -4,10 +4,7 @@ import model.Funcao;
 import model.TripulacaoViagem;
 import model.Tripulante;
 import model.Viagem;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +18,18 @@ public class TripulacaoViagemDAO {
              PreparedStatement st = c.prepareStatement(
                  "SELECT id_viagem,id_tripulante,funcao FROM dias.TRIPULACAO_VIAGEM WHERE id_viagem=?")) {
             st.setInt(1, idViagem);
+            try (ResultSet rs = st.executeQuery()) { while (rs.next()) lista.add(mapear(rs)); }
+        } catch (Exception e) { e.printStackTrace(); }
+        return lista;
+    }
+
+    /** Historico: todas as participacoes (viagens) de um tripulante. */
+    public List<TripulacaoViagem> listarPorTripulante(int idTripulante) {
+        List<TripulacaoViagem> lista = new ArrayList<>();
+        try (Connection c = db.getConn();
+             PreparedStatement st = c.prepareStatement(
+                 "SELECT id_viagem,id_tripulante,funcao FROM dias.TRIPULACAO_VIAGEM WHERE id_tripulante=?")) {
+            st.setInt(1, idTripulante);
             try (ResultSet rs = st.executeQuery()) { while (rs.next()) lista.add(mapear(rs)); }
         } catch (Exception e) { e.printStackTrace(); }
         return lista;
