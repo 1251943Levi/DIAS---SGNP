@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class FuncaoTest {
 
-    @Test
+    @org.testng.annotations.Test
     void rotulosLegiveis() {
         assertEquals("Capitão", Funcao.CAPITAO.toString());
         assertEquals("Oficial", Funcao.OFICIAL.toString());

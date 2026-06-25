@@ -46,6 +46,7 @@
         <Button text="Adicionar"  onAction="#onAdicionar"/>
         <Button text="Atualizar"  onAction="#onAtualizar"/>
         <Button text="Eliminar"   onAction="#onEliminar"/>
+        <Button text="Histórico"  onAction="#onHistorico"/>
       </HBox>
     </VBox>
   </bottom>
