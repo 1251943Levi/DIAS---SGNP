@@ -65,16 +65,20 @@ public class ManutencaoController {
     private void onConcluir() {
         Manutencao sel = tabelaManutencoes.getSelectionModel().getSelectedItem();
         if (sel == null) { mostrarErro("Selecione uma manutenção."); return; }
-        navioService.concluirManutencao(sel);
-        carregarManutencoes();
+        try {
+            navioService.concluirManutencao(sel);
+            carregarManutencoes();
+        } catch (Exception e) { mostrarErro(e.getMessage()); }
     }
 
     @FXML
     private void onEliminar() {
         Manutencao sel = tabelaManutencoes.getSelectionModel().getSelectedItem();
         if (sel == null) { mostrarErro("Selecione uma manutenção."); return; }
-        navioService.eliminarManutencao(sel.getId());   // BUG FIX: was missing this call
-        carregarManutencoes();
+        try {
+            navioService.eliminarManutencao(sel.getId());
+            carregarManutencoes();
+        } catch (Exception e) { mostrarErro(e.getMessage()); }
     }
 
     private void carregarManutencoes() {

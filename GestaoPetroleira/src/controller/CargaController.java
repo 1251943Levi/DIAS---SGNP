@@ -14,7 +14,7 @@ import service.CargaService;
 
 import java.util.List;
 
-public class CargaController {
+public class CargaController implements Atualizavel {
 
     // ── TIPO_CARGA tab ─────────────────────────────────────────────────────────
     @FXML private TableView<TipoCarga> tabelaTiposCarga;
@@ -119,20 +119,24 @@ public class CargaController {
     private void onAdicionarTipoCarga() {
         String nome = txtTcNome.getText().trim();
         if (nome.isEmpty()) { mostrarErro("Insira o nome do tipo de carga."); return; }
-        TipoCarga tc = new TipoCarga(0, nome, chkInflamavel.isSelected(),
-                chkCorrosiva.isSelected(), chkToxica.isSelected());
-        cargaService.adicionarTipoCarga(tc);
-        txtTcNome.clear(); chkInflamavel.setSelected(false);
-        chkCorrosiva.setSelected(false); chkToxica.setSelected(false);
-        carregarTiposCarga();
+        try {
+            TipoCarga tc = new TipoCarga(0, nome, chkInflamavel.isSelected(),
+                    chkCorrosiva.isSelected(), chkToxica.isSelected());
+            cargaService.adicionarTipoCarga(tc);
+            txtTcNome.clear(); chkInflamavel.setSelected(false);
+            chkCorrosiva.setSelected(false); chkToxica.setSelected(false);
+            carregarTiposCarga();
+        } catch (Exception e) { mostrarErro(e.getMessage()); }
     }
 
     @FXML
     private void onEliminarTipoCarga() {
         TipoCarga sel = tabelaTiposCarga.getSelectionModel().getSelectedItem();
         if (sel == null) { mostrarErro("Selecione um tipo de carga."); return; }
-        cargaService.eliminarTipoCarga(sel.getId());
-        carregarTiposCarga();
+        try {
+            cargaService.eliminarTipoCarga(sel.getId());
+            carregarTiposCarga();
+        } catch (Exception e) { mostrarErro(e.getMessage()); }
     }
 
     // ── CARGA actions ──────────────────────────────────────────────────────────
@@ -165,8 +169,58 @@ public class CargaController {
     private void onEliminarCarga() {
         Carga sel = tabelaCargas.getSelectionModel().getSelectedItem();
         if (sel == null) { mostrarErro("Selecione uma carga."); return; }
-        cargaService.eliminarCarga(sel.getId());
-        carregarCargas();
+        try {
+            cargaService.eliminarCarga(sel.getId());
+            carregarCargas();
+        } catch (Exception e) { mostrarErro(e.getMessage()); }
+    }
+
+    /** Preenche o formulário com a carga selecionada na tabela (para editar, ex.: pôr o peso). */
+    @FXML
+    private void onSelecionarCarga() {
+        Carga sel = tabelaCargas.getSelectionModel().getSelectedItem();
+        if (sel == null) return;
+        txtDesignacao.setText(sel.getDesignacao());
+        cmbTipoCarga.setValue(sel.getTipoCarga());
+        txtPeso.setText(String.valueOf(sel.getPeso()));
+        txtVolume.setText(String.valueOf(sel.getVolume()));
+        cmbPortoCarga.setValue(sel.getPortoCarga());
+        cmbPortoDescarga.setValue(sel.getPortoDescarga());
+        // Portos da carga vêm da viagem (origem/destino) — não se alteram ao editar
+        cmbPortoCarga.setDisable(true);
+        cmbPortoDescarga.setDisable(true);
+    }
+
+    /** Atualiza a carga selecionada (usado para preencher o peso de uma carga pendente). */
+    @FXML
+    private void onAtualizarCarga() {
+        Carga sel = tabelaCargas.getSelectionModel().getSelectedItem();
+        if (sel == null) { mostrarErro("Selecione uma carga."); return; }
+        try {
+            String desig = txtDesignacao.getText().trim();
+            if (desig.isEmpty()) throw new Exception("Insira a designação da carga.");
+            if (cmbTipoCarga.getValue() == null) throw new Exception("Selecione o tipo de carga.");
+            if (cmbPortoCarga.getValue() == null || cmbPortoDescarga.getValue() == null)
+                throw new Exception("Selecione os portos de carga e descarga.");
+            double peso   = Double.parseDouble(txtPeso.getText().trim());
+            double volume = Double.parseDouble(txtVolume.getText().trim());
+            if (cmbPortoCarga.getValue().getId() == cmbPortoDescarga.getValue().getId())
+                throw new Exception("Porto de carga e descarga devem ser diferentes.");
+
+            sel.setDesignacao(desig);
+            sel.setTipoCarga(cmbTipoCarga.getValue());
+            sel.setPeso(peso);
+            sel.setVolume(volume);
+            sel.setPortoCarga(cmbPortoCarga.getValue());
+            sel.setPortoDescarga(cmbPortoDescarga.getValue());
+            cargaService.atualizarCarga(sel);
+            limparFormCarga();
+            carregarCargas();
+        } catch (NumberFormatException e) {
+            mostrarErro("Peso e Volume devem ser números.");
+        } catch (Exception e) {
+            mostrarErro(e.getMessage());
+        }
     }
 
     // ── COMPATIBILIDADE actions ────────────────────────────────────────────────
@@ -175,17 +229,21 @@ public class CargaController {
         if (cmbTipoNavio.getValue() == null || cmbTipoCargaCompat.getValue() == null) {
             mostrarErro("Selecione tipo de navio e tipo de carga."); return;
         }
-        Compatibilidade comp = new Compatibilidade(0, cmbTipoNavio.getValue(), cmbTipoCargaCompat.getValue());
-        cargaService.adicionarCompatibilidade(comp);
-        carregarCompatibilidades();
+        try {
+            Compatibilidade comp = new Compatibilidade(0, cmbTipoNavio.getValue(), cmbTipoCargaCompat.getValue());
+            cargaService.adicionarCompatibilidade(comp);
+            carregarCompatibilidades();
+        } catch (Exception e) { mostrarErro(e.getMessage()); }
     }
 
     @FXML
     private void onEliminarCompatibilidade() {
         Compatibilidade sel = tabelaCompat.getSelectionModel().getSelectedItem();
         if (sel == null) { mostrarErro("Selecione uma compatibilidade."); return; }
-        cargaService.eliminarCompatibilidade(sel.getTipoNavio().getId(), sel.getTipoCarga().getId());
-        carregarCompatibilidades();
+        try {
+            cargaService.eliminarCompatibilidade(sel.getTipoNavio().getId(), sel.getTipoCarga().getId());
+            carregarCompatibilidades();
+        } catch (Exception e) { mostrarErro(e.getMessage()); }
     }
 
     // ── helpers ────────────────────────────────────────────────────────────────
@@ -207,6 +265,21 @@ public class CargaController {
     private void limparFormCarga() {
         txtDesignacao.clear(); txtPeso.clear(); txtVolume.clear();
         cmbTipoCarga.setValue(null); cmbPortoCarga.setValue(null); cmbPortoDescarga.setValue(null);
+        // Liberta os portos para uma nova carga manual
+        cmbPortoCarga.setDisable(false);
+        cmbPortoDescarga.setDisable(false);
+    }
+
+    /** Chamado pelo Main ao abrir a aba Cargas: recarrega tudo (apanha cargas pendentes novas). */
+    @Override
+    public void atualizar() {
+        List<Porto> portos = portoDAO.listarTodos();
+        cmbPortoCarga.setItems(FXCollections.observableArrayList(portos));
+        cmbPortoDescarga.setItems(FXCollections.observableArrayList(portos));
+        cmbTipoNavio.setItems(FXCollections.observableArrayList(tipoNavioDAO.listarTodos()));
+        carregarTiposCarga();
+        carregarCargas();
+        carregarCompatibilidades();
     }
 
     private void mostrarErro(String msg) {

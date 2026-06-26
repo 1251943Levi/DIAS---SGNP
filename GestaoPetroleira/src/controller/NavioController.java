@@ -110,8 +110,10 @@ public class NavioController {
     private void onEliminar() {
         Navio sel = tabelaNavios.getSelectionModel().getSelectedItem();
         if (sel == null) { mostrarErro("Selecione um navio."); return; }
-        navioService.eliminarNavio(sel.getId());
-        carregarNavios();
+        try {
+            navioService.eliminarNavio(sel.getId());
+            carregarNavios();
+        } catch (Exception e) { mostrarErro(e.getMessage()); }
     }
 
     @FXML

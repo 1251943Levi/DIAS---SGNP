@@ -99,8 +99,10 @@ public class TripulacaoController {
     private void onEliminar() {
         Tripulante sel = tabelaTripulantes.getSelectionModel().getSelectedItem();
         if (sel == null) { mostrarErro("Selecione um tripulante."); return; }
-        tripulacaoService.eliminarTripulante(sel.getId());
-        carregarTripulantes();
+        try {
+            tripulacaoService.eliminarTripulante(sel.getId());
+            carregarTripulantes();
+        } catch (Exception e) { mostrarErro(e.getMessage()); }
     }
 
     @FXML
@@ -155,7 +157,10 @@ public class TripulacaoController {
         Tripulante sel = tabelaTripulantes.getSelectionModel().getSelectedItem();
         if (sel == null) { mostrarErro("Selecione um tripulante."); return; }
 
-        List<TripulacaoViagem> historico = tripulacaoService.historicoDoTripulante(sel.getId());
+        List<TripulacaoViagem> historico;
+        try {
+            historico = tripulacaoService.historicoDoTripulante(sel.getId());
+        } catch (Exception e) { mostrarErro(e.getMessage()); return; }
 
         StringBuilder sb = new StringBuilder();
         if (historico.isEmpty()) {

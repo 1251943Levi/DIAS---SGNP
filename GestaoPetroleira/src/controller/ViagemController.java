@@ -112,17 +112,19 @@ public class ViagemController {
 
     private void onViagemSelecionada(Viagem v) {
         if (v == null) return;
-        if (tabelaCargasViagem != null)
-            tabelaCargasViagem.setItems(FXCollections.observableArrayList(
-                    cargaService.listarCargasDaViagem(v.getId())));
-        if (cmbCarga != null)
-            cmbCarga.setItems(FXCollections.observableArrayList(cargaService.listarCargas()));
-        if (tabelaTripulacaoViagem != null)
-            tabelaTripulacaoViagem.setItems(FXCollections.observableArrayList(
-                    tripulacaoService.listarTripulacaoDaViagem(v.getId())));
-        if (cmbTripulante != null)
-            cmbTripulante.setItems(FXCollections.observableArrayList(
-                    tripulacaoService.listarTripulantesDisponiveis()));
+        try {
+            if (tabelaCargasViagem != null)
+                tabelaCargasViagem.setItems(FXCollections.observableArrayList(
+                        cargaService.listarCargasDaViagem(v.getId())));
+            if (cmbCarga != null)
+                cmbCarga.setItems(FXCollections.observableArrayList(cargaService.listarCargas()));
+            if (tabelaTripulacaoViagem != null)
+                tabelaTripulacaoViagem.setItems(FXCollections.observableArrayList(
+                        tripulacaoService.listarTripulacaoDaViagem(v.getId())));
+            if (cmbTripulante != null)
+                cmbTripulante.setItems(FXCollections.observableArrayList(
+                        tripulacaoService.listarTripulantesDisponiveis()));
+        } catch (Exception e) { mostrarErro(e.getMessage()); }
     }
 
     private void carregarViagens() {
@@ -199,8 +201,10 @@ public class ViagemController {
         TripulacaoViagem tv = tabelaTripulacaoViagem != null ?
                 tabelaTripulacaoViagem.getSelectionModel().getSelectedItem() : null;
         if (v == null || tv == null) { mostrarErro("Selecione a viagem e o tripulante."); return; }
-        tripulacaoService.desassociarTripulante(v.getId(), tv.getTripulante());
-        onViagemSelecionada(v);
+        try {
+            tripulacaoService.desassociarTripulante(v.getId(), tv.getTripulante());
+            onViagemSelecionada(v);
+        } catch (Exception e) { mostrarErro(e.getMessage()); }
     }
 
     // ── helpers ────────────────────────────────────────────────────────────────
