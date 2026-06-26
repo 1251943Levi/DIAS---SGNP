@@ -24,7 +24,7 @@ public class TipoNavioDAO {
             while (rs.next()) lista.add(mapear(rs));
 
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new DataAccessException("Erro ao aceder à base de dados (tipos de navio): " + e.getMessage(), e);
         }
         return lista;
     }
@@ -41,7 +41,7 @@ public class TipoNavioDAO {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new DataAccessException("Erro ao aceder à base de dados (tipos de navio): " + e.getMessage(), e);
         }
         return null;
     }
@@ -61,7 +61,7 @@ public class TipoNavioDAO {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new DataAccessException("Erro ao aceder à base de dados (tipos de navio): " + e.getMessage(), e);
         }
     }
 
@@ -77,7 +77,7 @@ public class TipoNavioDAO {
             stmt.executeUpdate();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new DataAccessException("Erro ao aceder à base de dados (tipos de navio): " + e.getMessage(), e);
         }
     }
 
@@ -91,7 +91,7 @@ public class TipoNavioDAO {
             stmt.executeUpdate();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new DataAccessException("Erro ao aceder à base de dados (tipos de navio): " + e.getMessage(), e);
         }
     }
 

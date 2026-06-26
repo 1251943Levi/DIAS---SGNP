@@ -13,10 +13,16 @@ public class CompatibilidadeDAO {
 
     public List<Compatibilidade> listarTodos() {
         List<Compatibilidade> lista = new ArrayList<>();
+        // JOIN unico: traz tipo de navio + tipo de carga de uma vez (evita N+1).
+        String sql = "SELECT tn.id_tipo_navio, tn.designacao AS tn_designacao, tn.max_cargas, " +
+                "tc.id_tipo_carga, tc.designacao AS tc_designacao, tc.inflamavel, tc.corrosiva, tc.toxica " +
+                "FROM dias.COMPATIBILIDADE comp " +
+                "JOIN dias.TIPO_NAVIO tn ON comp.id_tipo_navio = tn.id_tipo_navio " +
+                "JOIN dias.TIPO_CARGA tc ON comp.id_tipo_carga = tc.id_tipo_carga";
         try (Connection c = db.getConn(); Statement st = c.createStatement();
-             ResultSet rs = st.executeQuery("SELECT id_tipo_navio,id_tipo_carga FROM dias.COMPATIBILIDADE")) {
+             ResultSet rs = st.executeQuery(sql)) {
             while (rs.next()) lista.add(mapear(rs));
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (compatibilidades): " + e.getMessage(), e); }
         return lista;
     }
 
@@ -31,7 +37,7 @@ public class CompatibilidadeDAO {
                 while (rs.next()) lista.add(new TipoCarga(rs.getInt("id"), rs.getString("nome"),
                         rs.getBoolean("inflamavel"), rs.getBoolean("corrosiva"), rs.getBoolean("toxica")));
             }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (compatibilidades): " + e.getMessage(), e); }
         return lista;
     }
 
@@ -43,7 +49,7 @@ public class CompatibilidadeDAO {
             try (ResultSet rs = st.executeQuery()) {
                 if (rs.next()) return rs.getInt(1) > 0;
             }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (compatibilidades): " + e.getMessage(), e); }
         return false;
     }
 
@@ -53,7 +59,7 @@ public class CompatibilidadeDAO {
                  "INSERT INTO dias.COMPATIBILIDADE(id_tipo_navio,id_tipo_carga) VALUES(?,?)")) {
             st.setInt(1, comp.getTipoNavio().getId()); st.setInt(2, comp.getTipoCarga().getId());
             st.executeUpdate();
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (compatibilidades): " + e.getMessage(), e); }
     }
 
     /** Chave primaria composta: elimina pela combinacao tipo de navio + tipo de carga. */
@@ -62,12 +68,14 @@ public class CompatibilidadeDAO {
              PreparedStatement st = c.prepareStatement(
                  "DELETE FROM dias.COMPATIBILIDADE WHERE id_tipo_navio=? AND id_tipo_carga=?")) {
             st.setInt(1, idTipoNavio); st.setInt(2, idTipoCarga); st.executeUpdate();
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (compatibilidades): " + e.getMessage(), e); }
     }
 
     private Compatibilidade mapear(ResultSet rs) throws Exception {
-        return new Compatibilidade(0,
-                tipoNavioDAO.buscarPorId(rs.getInt("id_tipo_navio")),
-                tipoCargaDAO.buscarPorId(rs.getInt("id_tipo_carga")));
+        TipoNavio tn = new TipoNavio(rs.getInt("id_tipo_navio"), rs.getString("tn_designacao"),
+                0, rs.getInt("max_cargas"));
+        TipoCarga tc = new TipoCarga(rs.getInt("id_tipo_carga"), rs.getString("tc_designacao"),
+                rs.getBoolean("inflamavel"), rs.getBoolean("corrosiva"), rs.getBoolean("toxica"));
+        return new Compatibilidade(0, tn, tc);
     }
 }

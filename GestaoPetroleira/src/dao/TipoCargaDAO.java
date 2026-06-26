@@ -11,7 +11,7 @@ public class TipoCargaDAO {
         try (Connection c = db.getConn(); Statement st = c.createStatement();
              ResultSet rs = st.executeQuery("SELECT id_tipo_carga AS id,designacao AS nome,inflamavel,corrosiva,toxica FROM dias.TIPO_CARGA")) {
             while (rs.next()) lista.add(mapear(rs));
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (tipos de carga): " + e.getMessage(), e); }
         return lista;
     }
 
@@ -20,7 +20,7 @@ public class TipoCargaDAO {
              PreparedStatement st = c.prepareStatement("SELECT id_tipo_carga AS id,designacao AS nome,inflamavel,corrosiva,toxica FROM dias.TIPO_CARGA WHERE id_tipo_carga=?")) {
             st.setInt(1, id);
             try (ResultSet rs = st.executeQuery()) { if (rs.next()) return mapear(rs); }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (tipos de carga): " + e.getMessage(), e); }
         return null;
     }
 
@@ -33,14 +33,14 @@ public class TipoCargaDAO {
             st.setBoolean(3, t.isCorrosiva()); st.setBoolean(4, t.isToxica());
             st.executeUpdate();
             try (ResultSet rs = st.getGeneratedKeys()) { if (rs.next()) t.setId(rs.getInt(1)); }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (tipos de carga): " + e.getMessage(), e); }
     }
 
     public void eliminar(int id) {
         try (Connection c = db.getConn();
              PreparedStatement st = c.prepareStatement("DELETE FROM dias.TIPO_CARGA WHERE id_tipo_carga=?")) {
             st.setInt(1, id); st.executeUpdate();
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (tipos de carga): " + e.getMessage(), e); }
     }
 
     private TipoCarga mapear(ResultSet rs) throws Exception {

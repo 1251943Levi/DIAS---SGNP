@@ -23,7 +23,7 @@ public class ManutencaoDAO {
             while (rs.next()) lista.add(mapear(rs));
 
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new DataAccessException("Erro ao aceder à base de dados (manutenções): " + e.getMessage(), e);
         }
         return lista;
     }
@@ -41,7 +41,7 @@ public class ManutencaoDAO {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new DataAccessException("Erro ao aceder à base de dados (manutenções): " + e.getMessage(), e);
         }
         return lista;
     }
@@ -58,7 +58,7 @@ public class ManutencaoDAO {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new DataAccessException("Erro ao aceder à base de dados (manutenções): " + e.getMessage(), e);
         }
         return null;
     }
@@ -81,7 +81,7 @@ public class ManutencaoDAO {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new DataAccessException("Erro ao aceder à base de dados (manutenções): " + e.getMessage(), e);
         }
     }
 
@@ -100,7 +100,7 @@ public class ManutencaoDAO {
             stmt.executeUpdate();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new DataAccessException("Erro ao aceder à base de dados (manutenções): " + e.getMessage(), e);
         }
     }
 
@@ -114,7 +114,7 @@ public class ManutencaoDAO {
             stmt.executeUpdate();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new DataAccessException("Erro ao aceder à base de dados (manutenções): " + e.getMessage(), e);
         }
     }
 
