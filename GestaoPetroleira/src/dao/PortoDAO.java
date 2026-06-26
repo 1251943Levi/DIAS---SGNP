@@ -19,7 +19,7 @@ public class PortoDAO {
             while (rs.next()) lista.add(mapear(rs));
 
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new DataAccessException("Erro ao aceder à base de dados (portos): " + e.getMessage(), e);
         }
         return lista;
     }
@@ -36,7 +36,7 @@ public class PortoDAO {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new DataAccessException("Erro ao aceder à base de dados (portos): " + e.getMessage(), e);
         }
         return null;
     }
@@ -57,7 +57,7 @@ public class PortoDAO {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new DataAccessException("Erro ao aceder à base de dados (portos): " + e.getMessage(), e);
         }
     }
 
@@ -74,7 +74,7 @@ public class PortoDAO {
             stmt.executeUpdate();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new DataAccessException("Erro ao aceder à base de dados (portos): " + e.getMessage(), e);
         }
     }
 
@@ -88,7 +88,7 @@ public class PortoDAO {
             stmt.executeUpdate();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new DataAccessException("Erro ao aceder à base de dados (portos): " + e.getMessage(), e);
         }
     }
 

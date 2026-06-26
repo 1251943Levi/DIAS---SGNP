@@ -14,14 +14,38 @@ public class NavioService {
 
     public List<Navio> listarNavios() { return navioDAO.listarTodos(); }
 
-    public void adicionarNavio(Navio navio) {
+    /** Apenas navios ATIVO — os únicos que podem ser usados em viagens. */
+    public List<Navio> listarNaviosAtivos() {
+        return navioDAO.listarTodos().stream()
+                .filter(n -> n.getEstadoOperacional() == EstadoOperacional.ATIVO)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    public void adicionarNavio(Navio navio) throws Exception {
+        validarTanques(navio);
         if (navio.getEstadoOperacional() == null) navio.setEstadoOperacional(EstadoOperacional.ATIVO);
         navioDAO.inserir(navio);
     }
 
-    public void atualizarNavio(Navio navio) { navioDAO.atualizar(navio); }
+    public void atualizarNavio(Navio navio) throws Exception {
+        validarTanques(navio);
+        navioDAO.atualizar(navio);
+    }
 
-    public void eliminarNavio(int id) { navioDAO.eliminar(id); }
+    /** Coerência: o navio deve ter tanques suficientes para o nº de cargas que o seu tipo permite. */
+    private void validarTanques(Navio navio) throws Exception {
+        if (navio.getTipoNavio() != null
+                && navio.getNumCompartimentos() < navio.getTipoNavio().getMaxCargas())
+            throw new Exception("O navio precisa de pelo menos " + navio.getTipoNavio().getMaxCargas()
+                    + " tanques: o tipo \"" + navio.getTipoNavio().getNome() + "\" permite "
+                    + navio.getTipoNavio().getMaxCargas() + " carga(s) por viagem.");
+    }
+
+    public void eliminarNavio(int id) {
+        // Remove primeiro as manutenções do navio, senão a chave estrangeira impede o DELETE
+        for (Manutencao m : manutencaoDAO.listarPorNavio(id)) manutencaoDAO.eliminar(m.getId());
+        navioDAO.eliminar(id);
+    }
 
     public boolean podeIniciarViagem(Navio navio) {
         return navio.getEstadoOperacional() == EstadoOperacional.ATIVO;

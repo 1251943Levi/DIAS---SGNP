@@ -11,36 +11,43 @@ public class CargaDAO {
     private final TipoCargaDAO tipoCargaDAO = new TipoCargaDAO();
     private final PortoDAO portoDAO = new PortoDAO();
 
-    // Aliases para o mapear() manter os nomes do modelo.
-    private static final String COLS =
-            "id_carga AS id, designacao, id_tipo_carga, volume, peso, id_porto_carga, id_porto_descarga";
+    // Consulta unica com JOINs: traz a carga + tipo de carga + portos numa so ida a BD.
+    // (Antes, cada carga fazia 3 consultas extra, cada uma a abrir nova ligacao -> N+1, muito lento.)
+    private static final String BASE =
+            "SELECT c.id_carga, c.designacao, c.volume, c.peso, c.id_viagem, " +
+            "tc.id_tipo_carga, tc.designacao AS tc_designacao, tc.inflamavel, tc.corrosiva, tc.toxica, " +
+            "pc.id_porto AS pc_id, pc.nome AS pc_nome, pc.pais AS pc_pais, pc.codigo AS pc_codigo, " +
+            "pd.id_porto AS pd_id, pd.nome AS pd_nome, pd.pais AS pd_pais, pd.codigo AS pd_codigo " +
+            "FROM dias.CARGA c " +
+            "JOIN dias.TIPO_CARGA tc ON c.id_tipo_carga = tc.id_tipo_carga " +
+            "JOIN dias.PORTO pc ON c.id_porto_carga = pc.id_porto " +
+            "JOIN dias.PORTO pd ON c.id_porto_descarga = pd.id_porto";
 
     public List<Carga> listarTodos() {
         List<Carga> lista = new ArrayList<>();
         try (Connection c = db.getConn(); Statement st = c.createStatement();
-             ResultSet rs = st.executeQuery("SELECT " + COLS + " FROM dias.CARGA")) {
+             ResultSet rs = st.executeQuery(BASE)) {
             while (rs.next()) lista.add(mapear(rs));
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (cargas): " + e.getMessage(), e); }
         return lista;
     }
 
     /** Cargas associadas a uma viagem (CARGA.id_viagem). */
     public List<Carga> listarPorViagem(int idViagem) {
         List<Carga> lista = new ArrayList<>();
-        String sql = "SELECT " + COLS + " FROM dias.CARGA WHERE id_viagem=?";
-        try (Connection c = db.getConn(); PreparedStatement st = c.prepareStatement(sql)) {
+        try (Connection c = db.getConn(); PreparedStatement st = c.prepareStatement(BASE + " WHERE c.id_viagem=?")) {
             st.setInt(1, idViagem);
             try (ResultSet rs = st.executeQuery()) { while (rs.next()) lista.add(mapear(rs)); }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (cargas): " + e.getMessage(), e); }
         return lista;
     }
 
     public Carga buscarPorId(int id) {
         try (Connection c = db.getConn();
-             PreparedStatement st = c.prepareStatement("SELECT " + COLS + " FROM dias.CARGA WHERE id_carga=?")) {
+             PreparedStatement st = c.prepareStatement(BASE + " WHERE c.id_carga=?")) {
             st.setInt(1, id);
             try (ResultSet rs = st.executeQuery()) { if (rs.next()) return mapear(rs); }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (cargas): " + e.getMessage(), e); }
         return null;
     }
 
@@ -53,7 +60,7 @@ public class CargaDAO {
             st.setInt(5, carga.getPortoCarga().getId()); st.setInt(6, carga.getPortoDescarga().getId());
             st.executeUpdate();
             try (ResultSet rs = st.getGeneratedKeys()) { if (rs.next()) carga.setId(rs.getInt(1)); }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (cargas): " + e.getMessage(), e); }
     }
 
     public void atualizar(Carga carga) {
@@ -63,14 +70,14 @@ public class CargaDAO {
             st.setDouble(3, carga.getVolume()); st.setDouble(4, carga.getPeso());
             st.setInt(5, carga.getPortoCarga().getId()); st.setInt(6, carga.getPortoDescarga().getId());
             st.setInt(7, carga.getId()); st.executeUpdate();
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (cargas): " + e.getMessage(), e); }
     }
 
     public void eliminar(int id) {
         try (Connection c = db.getConn();
              PreparedStatement st = c.prepareStatement("DELETE FROM dias.CARGA WHERE id_carga=?")) {
             st.setInt(1, id); st.executeUpdate();
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (cargas): " + e.getMessage(), e); }
     }
 
     /** Associa a carga a uma viagem (define CARGA.id_viagem). */
@@ -78,7 +85,7 @@ public class CargaDAO {
         try (Connection c = db.getConn();
              PreparedStatement st = c.prepareStatement("UPDATE dias.CARGA SET id_viagem=? WHERE id_carga=?")) {
             st.setInt(1, idViagem); st.setInt(2, idCarga); st.executeUpdate();
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (cargas): " + e.getMessage(), e); }
     }
 
     /** Remove a associacao da carga a viagem (CARGA.id_viagem = NULL). */
@@ -86,7 +93,7 @@ public class CargaDAO {
         try (Connection c = db.getConn();
              PreparedStatement st = c.prepareStatement("UPDATE dias.CARGA SET id_viagem=NULL WHERE id_carga=? AND id_viagem=?")) {
             st.setInt(1, idCarga); st.setInt(2, idViagem); st.executeUpdate();
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (cargas): " + e.getMessage(), e); }
     }
 
     public int contarCargasPorViagem(int idViagem) {
@@ -94,7 +101,7 @@ public class CargaDAO {
              PreparedStatement st = c.prepareStatement("SELECT COUNT(*) FROM dias.CARGA WHERE id_viagem=?")) {
             st.setInt(1, idViagem);
             try (ResultSet rs = st.executeQuery()) { if (rs.next()) return rs.getInt(1); }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (cargas): " + e.getMessage(), e); }
         return 0;
     }
 
@@ -103,15 +110,18 @@ public class CargaDAO {
         try (Connection c = db.getConn(); PreparedStatement st = c.prepareStatement(sql)) {
             st.setInt(1, idViagem);
             try (ResultSet rs = st.executeQuery()) { if (rs.next()) return rs.getDouble(1); }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (cargas): " + e.getMessage(), e); }
         return 0;
     }
 
     private Carga mapear(ResultSet rs) throws Exception {
-        return new Carga(rs.getInt("id"), rs.getString("designacao"),
-                tipoCargaDAO.buscarPorId(rs.getInt("id_tipo_carga")),
-                rs.getDouble("volume"), rs.getDouble("peso"),
-                portoDAO.buscarPorId(rs.getInt("id_porto_carga")),
-                portoDAO.buscarPorId(rs.getInt("id_porto_descarga")));
+        TipoCarga tc = new TipoCarga(rs.getInt("id_tipo_carga"), rs.getString("tc_designacao"),
+                rs.getBoolean("inflamavel"), rs.getBoolean("corrosiva"), rs.getBoolean("toxica"));
+        Porto pc = new Porto(rs.getInt("pc_id"), rs.getString("pc_nome"),
+                rs.getString("pc_pais"), rs.getString("pc_codigo"));
+        Porto pd = new Porto(rs.getInt("pd_id"), rs.getString("pd_nome"),
+                rs.getString("pd_pais"), rs.getString("pd_codigo"));
+        return new Carga(rs.getInt("id_carga"), rs.getString("designacao"), tc,
+                rs.getDouble("volume"), rs.getDouble("peso"), pc, pd);
     }
 }

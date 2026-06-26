@@ -17,7 +17,7 @@ public class TripulanteDAO {
         try (Connection c = db.getConn(); Statement st = c.createStatement();
              ResultSet rs = st.executeQuery("SELECT " + COLS + " FROM dias.TRIPULANTE")) {
             while (rs.next()) lista.add(mapear(rs));
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (tripulantes): " + e.getMessage(), e); }
         return lista;
     }
 
@@ -26,7 +26,7 @@ public class TripulanteDAO {
         try (Connection c = db.getConn(); Statement st = c.createStatement();
              ResultSet rs = st.executeQuery("SELECT " + COLS + " FROM dias.TRIPULANTE WHERE disponibilidade=1")) {
             while (rs.next()) lista.add(mapear(rs));
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (tripulantes): " + e.getMessage(), e); }
         return lista;
     }
 
@@ -39,7 +39,7 @@ public class TripulanteDAO {
         try (Connection c = db.getConn(); PreparedStatement st = c.prepareStatement(sql)) {
             st.setInt(1, idViagem);
             try (ResultSet rs = st.executeQuery()) { while (rs.next()) lista.add(mapear(rs)); }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (tripulantes): " + e.getMessage(), e); }
         return lista;
     }
 
@@ -49,7 +49,7 @@ public class TripulanteDAO {
                  "SELECT " + COLS + " FROM dias.TRIPULANTE WHERE id_tripulante=?")) {
             st.setInt(1, id);
             try (ResultSet rs = st.executeQuery()) { if (rs.next()) return mapear(rs); }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (tripulantes): " + e.getMessage(), e); }
         return null;
     }
 
@@ -62,7 +62,7 @@ public class TripulanteDAO {
             st.setString(3, t.getFuncao().name()); st.setBoolean(4, t.isDisponivel());
             st.executeUpdate();
             try (ResultSet rs = st.getGeneratedKeys()) { if (rs.next()) t.setId(rs.getInt(1)); }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (tripulantes): " + e.getMessage(), e); }
     }
 
     public void atualizar(Tripulante t) {
@@ -72,14 +72,14 @@ public class TripulanteDAO {
             st.setString(1, t.getNome()); st.setString(2, t.getNumeroMatricula());
             st.setString(3, t.getFuncao().name()); st.setBoolean(4, t.isDisponivel());
             st.setInt(5, t.getId()); st.executeUpdate();
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (tripulantes): " + e.getMessage(), e); }
     }
 
     public void eliminar(int id) {
         try (Connection c = db.getConn();
              PreparedStatement st = c.prepareStatement("DELETE FROM dias.TRIPULANTE WHERE id_tripulante=?")) {
             st.setInt(1, id); st.executeUpdate();
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (tripulantes): " + e.getMessage(), e); }
     }
 
     private Tripulante mapear(ResultSet rs) throws Exception {

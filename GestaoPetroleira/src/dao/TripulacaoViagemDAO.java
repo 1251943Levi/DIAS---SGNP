@@ -19,7 +19,7 @@ public class TripulacaoViagemDAO {
                  "SELECT id_viagem,id_tripulante,funcao FROM dias.TRIPULACAO_VIAGEM WHERE id_viagem=?")) {
             st.setInt(1, idViagem);
             try (ResultSet rs = st.executeQuery()) { while (rs.next()) lista.add(mapear(rs)); }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (tripulação da viagem): " + e.getMessage(), e); }
         return lista;
     }
 
@@ -31,7 +31,7 @@ public class TripulacaoViagemDAO {
                  "SELECT id_viagem,id_tripulante,funcao FROM dias.TRIPULACAO_VIAGEM WHERE id_tripulante=?")) {
             st.setInt(1, idTripulante);
             try (ResultSet rs = st.executeQuery()) { while (rs.next()) lista.add(mapear(rs)); }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (tripulação da viagem): " + e.getMessage(), e); }
         return lista;
     }
 
@@ -41,7 +41,7 @@ public class TripulacaoViagemDAO {
                  "INSERT INTO dias.TRIPULACAO_VIAGEM(id_viagem,id_tripulante,funcao) VALUES(?,?,?)")) {
             st.setInt(1, tv.getViagem().getId()); st.setInt(2, tv.getTripulante().getId());
             st.setString(3, tv.getFuncao().name()); st.executeUpdate();
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (tripulação da viagem): " + e.getMessage(), e); }
     }
 
     public void eliminar(int idViagem, int idTripulante) {
@@ -49,7 +49,7 @@ public class TripulacaoViagemDAO {
              PreparedStatement st = c.prepareStatement(
                  "DELETE FROM dias.TRIPULACAO_VIAGEM WHERE id_viagem=? AND id_tripulante=?")) {
             st.setInt(1, idViagem); st.setInt(2, idTripulante); st.executeUpdate();
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (tripulação da viagem): " + e.getMessage(), e); }
     }
 
     public int contarPorViagem(int idViagem) {
@@ -58,7 +58,7 @@ public class TripulacaoViagemDAO {
                  "SELECT COUNT(*) FROM dias.TRIPULACAO_VIAGEM WHERE id_viagem=?")) {
             st.setInt(1, idViagem);
             try (ResultSet rs = st.executeQuery()) { if (rs.next()) return rs.getInt(1); }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (tripulação da viagem): " + e.getMessage(), e); }
         return 0;
     }
 
@@ -68,7 +68,7 @@ public class TripulacaoViagemDAO {
                  "SELECT COUNT(*) FROM dias.TRIPULACAO_VIAGEM WHERE id_viagem=? AND id_tripulante=?")) {
             st.setInt(1, idViagem); st.setInt(2, idTripulante);
             try (ResultSet rs = st.executeQuery()) { if (rs.next()) return rs.getInt(1) > 0; }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (tripulação da viagem): " + e.getMessage(), e); }
         return false;
     }
 

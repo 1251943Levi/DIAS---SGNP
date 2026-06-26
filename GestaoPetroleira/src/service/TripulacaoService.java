@@ -20,7 +20,32 @@ public class TripulacaoService {
 
     public void adicionarTripulante(Tripulante t) { tripulanteDAO.inserir(t); }
 
-    public void atualizarTripulante(Tripulante t) { tripulanteDAO.atualizar(t); }
+    public void atualizarTripulante(Tripulante t) throws Exception {
+        Tripulante atual = tripulanteDAO.buscarPorId(t.getId());
+        // Só permite alterar a função se o tripulante NÃO estiver numa viagem ativa (planeada/em curso).
+        if (atual != null && atual.getFuncao() != t.getFuncao() && estaEmViagemAtiva(t.getId()))
+            throw new Exception("Não é possível alterar a função: o tripulante está a ser utilizado numa viagem ativa. "
+                    + "Conclua ou cancele a viagem primeiro.");
+        tripulanteDAO.atualizar(t);
+    }
+
+    /** Um tripulante está "em viagem ativa" se participa numa viagem PLANEADA ou EM_CURSO. */
+    private boolean estaEmViagemAtiva(int idTripulante) {
+        for (TripulacaoViagem tv : tripulacaoViagemDAO.listarPorTripulante(idTripulante)) {
+            EstadoViagem e = tv.getViagem().getEstado();
+            if (e == EstadoViagem.PLANEADA || e == EstadoViagem.EM_CURSO) return true;
+        }
+        return false;
+    }
+
+    /** Liberta (torna disponíveis) os tripulantes de uma viagem — usado ao concluir/cancelar. */
+    public void libertarTripulacao(int idViagem) {
+        for (TripulacaoViagem tv : tripulacaoViagemDAO.listarPorViagem(idViagem)) {
+            Tripulante t = tv.getTripulante();
+            t.setDisponivel(true);
+            tripulanteDAO.atualizar(t);
+        }
+    }
 
     public void eliminarTripulante(int id) { tripulanteDAO.eliminar(id); }
 

@@ -57,9 +57,9 @@
       <HBox spacing="8">
         <Button text="Adicionar"   onAction="#onAdicionar"/>
         <Button text="Atualizar"   onAction="#onAtualizar"/>
+        <Button text="Limpar"      onAction="#onLimpar"/>
         <Button text="Eliminar"    onAction="#onEliminar"/>
         <Button text="Manutenções" onAction="#onManutencao"/>
-        <Button text="Novo Tipo"   onAction="#onNovoTipo"/>
       </HBox>
     </VBox>
   </bottom>

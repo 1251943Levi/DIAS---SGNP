@@ -20,7 +20,7 @@ public class NavioDAO {
         try (Connection c = db.getConn(); Statement st = c.createStatement();
              ResultSet rs = st.executeQuery("SELECT " + COLS + " FROM dias.NAVIO")) {
             while (rs.next()) lista.add(mapear(rs));
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (navios): " + e.getMessage(), e); }
         return lista;
     }
 
@@ -29,7 +29,7 @@ public class NavioDAO {
              PreparedStatement st = c.prepareStatement("SELECT " + COLS + " FROM dias.NAVIO WHERE id_navio=?")) {
             st.setInt(1, id);
             try (ResultSet rs = st.executeQuery()) { if (rs.next()) return mapear(rs); }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (navios): " + e.getMessage(), e); }
         return null;
     }
 
@@ -45,7 +45,7 @@ public class NavioDAO {
             if (n.getIdPortoAtual() != null) st.setInt(9, n.getIdPortoAtual()); else st.setNull(9, Types.INTEGER);
             st.executeUpdate();
             try (ResultSet rs = st.getGeneratedKeys()) { if (rs.next()) n.setId(rs.getInt(1)); }
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (navios): " + e.getMessage(), e); }
     }
 
     public void atualizar(Navio n) {
@@ -58,14 +58,14 @@ public class NavioDAO {
             st.setInt(7, n.getAnoFabrico()); st.setString(8, n.getEstadoOperacional().name());
             if (n.getIdPortoAtual() != null) st.setInt(9, n.getIdPortoAtual()); else st.setNull(9, Types.INTEGER);
             st.setInt(10, n.getId()); st.executeUpdate();
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (navios): " + e.getMessage(), e); }
     }
 
     public void eliminar(int id) {
         try (Connection c = db.getConn();
              PreparedStatement st = c.prepareStatement("DELETE FROM dias.NAVIO WHERE id_navio=?")) {
             st.setInt(1, id); st.executeUpdate();
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { throw new DataAccessException("Erro ao aceder à base de dados (navios): " + e.getMessage(), e); }
     }
 
     private Navio mapear(ResultSet rs) throws Exception {

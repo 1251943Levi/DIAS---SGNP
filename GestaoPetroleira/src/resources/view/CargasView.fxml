@@ -42,7 +42,7 @@
             <Label text="Pesquisar:"/>
             <TextField fx:id="txtPesquisaCarga" promptText="designação, tipo ou porto..." prefWidth="320"/>
           </HBox>
-          <TableView fx:id="tabelaCargas">
+          <TableView fx:id="tabelaCargas" onMouseClicked="#onSelecionarCarga">
             <columns>
               <TableColumn fx:id="colCId"        text="ID"           prefWidth="40"/>
               <TableColumn fx:id="colCDesig"     text="Designação"   prefWidth="180"/>
@@ -69,6 +69,7 @@
           </GridPane>
           <HBox spacing="8">
             <Button text="Adicionar" onAction="#onAdicionarCarga"/>
+            <Button text="Atualizar" onAction="#onAtualizarCarga"/>
             <Button text="Eliminar"  onAction="#onEliminarCarga"/>
           </HBox>
         </VBox>
