@@ -63,11 +63,6 @@
                 <TableColumn fx:id="colCargaPeso" text="Peso (t)"   prefWidth="90"/>
               </columns>
             </TableView>
-            <HBox spacing="8" alignment="CENTER_LEFT">
-              <ComboBox fx:id="cmbCarga" prefWidth="250"/>
-              <Button text="Associar Carga"    onAction="#onAssociarCarga"/>
-              <Button text="Desassociar Carga" onAction="#onDesassociarCarga"/>
-            </HBox>
           </VBox>
         </Tab>
 
