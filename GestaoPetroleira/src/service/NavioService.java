@@ -21,7 +21,11 @@ public class NavioService {
 
     public void atualizarNavio(Navio navio) { navioDAO.atualizar(navio); }
 
-    public void eliminarNavio(int id) { navioDAO.eliminar(id); }
+    public void eliminarNavio(int id) {
+        // Remove primeiro as manutenções do navio, senão a chave estrangeira impede o DELETE
+        for (Manutencao m : manutencaoDAO.listarPorNavio(id)) manutencaoDAO.eliminar(m.getId());
+        navioDAO.eliminar(id);
+    }
 
     public boolean podeIniciarViagem(Navio navio) {
         return navio.getEstadoOperacional() == EstadoOperacional.ATIVO;
