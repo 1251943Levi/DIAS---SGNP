@@ -25,6 +25,7 @@ public class ViagemService {
     private final PortoDAO portoDAO = new PortoDAO();
     private final TripulacaoViagemDAO tripulacaoViagemDAO = new TripulacaoViagemDAO();
     private final CargaDAO cargaDAO = new CargaDAO();
+    private final TripulacaoService tripulacaoService = new TripulacaoService();
     private final CompatibilidadeDAO compatibilidadeDAO = new CompatibilidadeDAO();
 
     public List<Viagem> listarViagens() {
@@ -112,6 +113,10 @@ public class ViagemService {
         Navio navio = viagem.getNavio();
         navio.setIdPortoAtual(viagem.getPortoDestino().getId());
         navioDAO.atualizar(navio);
+
+        // Viagem concluída: liberta a tripulação (fica disponível para novas viagens).
+        // O navio fica também livre (viagens concluídas não contam como ativas).
+        tripulacaoService.libertarTripulacao(viagem.getId());
     }
 
     /** PLANEADA/EM_CURSO -> CANCELADA. */
@@ -119,6 +124,9 @@ public class ViagemService {
         validarTransicao(viagem.getEstado(), EstadoViagem.CANCELADA);
         viagem.setEstado(EstadoViagem.CANCELADA);
         viagemDAO.atualizar(viagem);
+
+        // Viagem cancelada: liberta a tripulação para outras viagens.
+        tripulacaoService.libertarTripulacao(viagem.getId());
     }
 
     private void garantirSemViagemAtiva(int idNavio) throws Exception {
