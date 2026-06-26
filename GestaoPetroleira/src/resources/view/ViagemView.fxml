@@ -76,8 +76,7 @@
               </columns>
             </TableView>
             <HBox spacing="8" alignment="CENTER_LEFT">
-              <ComboBox fx:id="cmbTripulante" prefWidth="200"/>
-              <ComboBox fx:id="cmbFuncaoTrip" prefWidth="130"/>
+              <ComboBox fx:id="cmbTripulante" prefWidth="260"/>
               <Button text="Associar"    onAction="#onAssociarTripulante"/>
               <Button text="Desassociar" onAction="#onDesassociarTripulante"/>
             </HBox>

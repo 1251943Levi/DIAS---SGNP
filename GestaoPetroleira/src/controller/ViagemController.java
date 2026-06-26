@@ -15,7 +15,7 @@ import service.ViagemService;
 
 import java.util.List;
 
-public class ViagemController {
+public class ViagemController implements Atualizavel {
 
     // ── tabela viagens ─────────────────────────────────────────────────────────
     @FXML private TableView<Viagem>             tabelaViagens;
@@ -79,7 +79,7 @@ public class ViagemController {
         if (colTripFuncao != null) colTripFuncao.setCellValueFactory(d ->
                 new SimpleStringProperty(d.getValue().getFuncao().name()));
 
-        cmbNavio.setItems(FXCollections.observableArrayList(navioService.listarNavios()));
+        cmbNavio.setItems(FXCollections.observableArrayList(navioService.listarNaviosAtivos()));
         cmbOrigem.setItems(FXCollections.observableArrayList(viagemService.listarPortos()));
         cmbDestino.setItems(FXCollections.observableArrayList(viagemService.listarPortos()));
 
@@ -125,6 +125,25 @@ public class ViagemController {
                 cmbTripulante.setItems(FXCollections.observableArrayList(
                         tripulacaoService.listarTripulantesDisponiveis()));
         } catch (Exception e) { mostrarErro(e.getMessage()); }
+    }
+
+    /** Chamado pelo Main ao abrir a aba Viagens: recarrega navios, portos e viagens
+     *  (apanha navios/portos criados noutras abas). */
+    @Override
+    public void atualizar() {
+        Viagem selecionada = tabelaViagens.getSelectionModel().getSelectedItem();
+        int idSelecionado = selecionada != null ? selecionada.getId() : -1;
+
+        cmbNavio.setItems(FXCollections.observableArrayList(navioService.listarNaviosAtivos()));
+        cmbOrigem.setItems(FXCollections.observableArrayList(viagemService.listarPortos()));
+        cmbDestino.setItems(FXCollections.observableArrayList(viagemService.listarPortos()));
+        carregarViagens();
+
+        // Repõe a seleção da viagem (pelo id) para o painel de cargas/tripulação
+        // recarregar com os dados atuais (ex.: tipo de carga alterado noutra aba).
+        if (idSelecionado != -1)
+            for (Viagem v : dadosViagens)
+                if (v.getId() == idSelecionado) { tabelaViagens.getSelectionModel().select(v); break; }
     }
 
     private void carregarViagens() {
@@ -185,10 +204,10 @@ public class ViagemController {
     private void onAssociarTripulante() {
         Viagem v     = tabelaViagens.getSelectionModel().getSelectedItem();
         Tripulante t = cmbTripulante != null ? cmbTripulante.getValue() : null;
-        Funcao f     = cmbFuncaoTrip != null ? cmbFuncaoTrip.getValue() : null;
         if (v == null) { mostrarErro("Selecione uma viagem."); return; }
         if (t == null) { mostrarErro("Selecione um tripulante."); return; }
-        if (f == null) { mostrarErro("Selecione a função."); return; }
+        Funcao f = t.getFuncao();   // função automática: a do próprio tripulante
+        if (f == null) { mostrarErro("O tripulante selecionado não tem função definida."); return; }
         try {
             tripulacaoService.associarTripulanteAViagem(v, t, f);
             onViagemSelecionada(v);
