@@ -9,7 +9,7 @@
   </top>
 
   <center>
-    <SplitPane orientation="VERTICAL">
+    <SplitPane orientation="VERTICAL" dividerPositions="0.62">
 
       <!-- tabela principal + formulário criação -->
       <VBox spacing="6" style="-fx-padding:8;">
@@ -17,7 +17,7 @@
           <Label text="Pesquisar:"/>
           <TextField fx:id="txtPesquisa" promptText="navio, origem, destino ou estado..." prefWidth="320"/>
         </HBox>
-        <TableView fx:id="tabelaViagens" prefHeight="220">
+        <TableView fx:id="tabelaViagens" prefHeight="320" VBox.vgrow="ALWAYS">
           <columns>
             <TableColumn fx:id="colId"      text="ID"       prefWidth="40"/>
             <TableColumn fx:id="colNavio"   text="Navio"    prefWidth="160"/>
@@ -58,11 +58,18 @@
           <VBox spacing="6" style="-fx-padding:8;">
             <TableView fx:id="tabelaCargasViagem" prefHeight="140">
               <columns>
-                <TableColumn fx:id="colCargaNome" text="Designação" prefWidth="200"/>
-                <TableColumn fx:id="colCargaTipo" text="Tipo"       prefWidth="130"/>
-                <TableColumn fx:id="colCargaPeso" text="Peso (t)"   prefWidth="90"/>
+                <TableColumn fx:id="colCargaTanque" text="Compartimento" prefWidth="110"/>
+                <TableColumn fx:id="colCargaNome"   text="Designação"    prefWidth="180"/>
+                <TableColumn fx:id="colCargaTipo"   text="Tipo"          prefWidth="120"/>
+                <TableColumn fx:id="colCargaPeso"   text="Peso (t)"      prefWidth="80"/>
               </columns>
             </TableView>
+            <HBox spacing="8" alignment="CENTER_LEFT">
+              <ComboBox fx:id="cmbCarga"  prefWidth="240" promptText="Carga"/>
+              <ComboBox fx:id="cmbTanque" prefWidth="120" promptText="Compartimento"/>
+              <Button fx:id="btnAssociarCarga"    text="Associar Carga"    onAction="#onAssociarCarga"/>
+              <Button fx:id="btnDesassociarCarga" text="Desassociar Carga" onAction="#onDesassociarCarga"/>
+            </HBox>
           </VBox>
         </Tab>
 

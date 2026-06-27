@@ -108,18 +108,27 @@ CREATE TABLE dias.TIPO_CARGA (
 );
 GO
 
--- Carga: pertence a uma viagem (id_viagem). peso = 0 => carga "pendente"
--- (gerada automaticamente ao planear a viagem e preenchida depois na gestão de cargas).
+-- Carga: pertence a uma viagem (id_viagem) e ocupa um compartimento (numero_tanque).
+-- Sem viagem (id_viagem NULL) = carga "template" no catálogo, ainda por associar.
+-- Os portos ficam NULL no template; ao associar a uma viagem, a cópia herda
+-- os portos da rota da viagem (origem -> carga, destino -> descarga).
 CREATE TABLE dias.CARGA (
     id_carga          INT IDENTITY(1,1) PRIMARY KEY,
     designacao        VARCHAR(150) NOT NULL,
     id_tipo_carga     INT   NOT NULL REFERENCES dias.TIPO_CARGA(id_tipo_carga),
     volume            FLOAT NOT NULL,
     peso              FLOAT NOT NULL,
-    id_porto_carga    INT   NOT NULL REFERENCES dias.PORTO(id_porto),
-    id_porto_descarga INT   NOT NULL REFERENCES dias.PORTO(id_porto),
-    id_viagem         INT   NULL REFERENCES dias.VIAGEM(id_viagem)
+    id_porto_carga    INT   NULL REFERENCES dias.PORTO(id_porto),   -- NULL no template; vem da viagem
+    id_porto_descarga INT   NULL REFERENCES dias.PORTO(id_porto),   -- NULL no template; vem da viagem
+    id_viagem         INT   NULL REFERENCES dias.VIAGEM(id_viagem),
+    numero_tanque     INT   NULL                  -- compartimento do navio que esta carga ocupa
 );
+GO
+
+-- Um compartimento só pode ter uma carga por viagem. Índice filtrado (só cargas já associadas),
+-- para o catálogo (id_viagem NULL) poder ter muitas cargas sem viagem.
+CREATE UNIQUE INDEX UQ_CARGA_viagem_tanque
+    ON dias.CARGA(id_viagem, numero_tanque) WHERE id_viagem IS NOT NULL;
 GO
 
 -- Compatibilidade tipo de navio <-> tipo de carga (relação N:N, chave composta)
@@ -189,6 +198,24 @@ INSERT INTO dias.TRIPULANTE (nome, nr_identificacao, funcao, disponibilidade) VA
     ('Ana Sousa',    'MAT1002', 'OFICIAL',    1),
     ('Carlos Pinto', 'MAT1003', 'ENGENHEIRO', 1),
     ('Rita Lopes',   'MAT1004', 'OPERADOR',   1);
+GO
+
+-- Cargas-template (catálogo): SEM viagem e SEM portos.
+-- Os portos são definidos pela viagem ao associar (origem -> carga, destino -> descarga).
+-- O id_tipo_carga liga ao tipo (ver compatibilidades com os tipos de navio).
+INSERT INTO dias.CARGA (designacao, id_tipo_carga, volume, peso, id_porto_carga, id_porto_descarga, id_viagem, numero_tanque) VALUES
+    ('Petroleo bruto Brent',   1, 300000, 260000, NULL, NULL, NULL, NULL),  -- tipo 1 (Crude)
+    ('Petroleo bruto WTI',     1, 280000, 240000, NULL, NULL, NULL, NULL),  -- tipo 1 (Crude)
+    ('Gasolina 95',            2,  35000,  26000, NULL, NULL, NULL, NULL),  -- tipo 2 (Refinados)
+    ('Gasolina 98',            2,  30000,  22500, NULL, NULL, NULL, NULL),  -- tipo 2
+    ('Diesel rodoviario',      3,  40000,  33000, NULL, NULL, NULL, NULL),  -- tipo 3
+    ('Gasoleo aquecimento',    3,  38000,  31500, NULL, NULL, NULL, NULL),  -- tipo 3
+    ('Jet fuel A1',            4,  25000,  19500, NULL, NULL, NULL, NULL),  -- tipo 4
+    ('Querosene',              4,  20000,  16000, NULL, NULL, NULL, NULL),  -- tipo 4
+    ('Fueloleo pesado',        5,  45000,  43000, NULL, NULL, NULL, NULL),  -- tipo 5
+    ('Betume industrial',      5,  30000,  31000, NULL, NULL, NULL, NULL),  -- tipo 5
+    ('Soda caustica',          6,  18000,  21000, NULL, NULL, NULL, NULL),  -- tipo 6 (Quimicos)
+    ('Metanol',                6,  22000,  17500, NULL, NULL, NULL, NULL);  -- tipo 6
 GO
 
 -- 5) Verificação -------------------------------------------------------

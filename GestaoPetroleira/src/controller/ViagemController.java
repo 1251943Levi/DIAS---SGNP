@@ -40,11 +40,15 @@ public class ViagemController implements Atualizavel {
 
     // ── painel associar cargas ─────────────────────────────────────────────────
     @FXML private TableView<Carga>            tabelaCargasViagem;
+    @FXML private TableColumn<Carga, String>  colCargaTanque;
     @FXML private TableColumn<Carga, String>  colCargaNome;
     @FXML private TableColumn<Carga, String>  colCargaTipo;
     @FXML private TableColumn<Carga, Double>  colCargaPeso;
 
-    @FXML private ComboBox<Carga> cmbCarga;
+    @FXML private ComboBox<Carga>   cmbCarga;
+    @FXML private ComboBox<Integer> cmbTanque;
+    @FXML private Button            btnAssociarCarga;
+    @FXML private Button            btnDesassociarCarga;
 
     // ── painel associar tripulação ─────────────────────────────────────────────
     @FXML private TableView<TripulacaoViagem>           tabelaTripulacaoViagem;
@@ -70,6 +74,8 @@ public class ViagemController implements Atualizavel {
                 d.getValue().getDataChegada() != null ? d.getValue().getDataChegada().toString() : "—"));
         colEstado.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getEstado().name()));
 
+        if (colCargaTanque != null) colCargaTanque.setCellValueFactory(d ->
+                new SimpleStringProperty(d.getValue().getNumeroTanque() != null ? "Tanque " + d.getValue().getNumeroTanque() : "—"));
         if (colCargaNome  != null) colCargaNome .setCellValueFactory(new PropertyValueFactory<>("designacao"));
         if (colCargaTipo  != null) colCargaTipo .setCellValueFactory(d ->
                 new SimpleStringProperty(d.getValue().getTipoCarga() != null ? d.getValue().getTipoCarga().getNome() : "—"));
@@ -117,13 +123,23 @@ public class ViagemController implements Atualizavel {
                 tabelaCargasViagem.setItems(FXCollections.observableArrayList(
                         cargaService.listarCargasDaViagem(v.getId())));
             if (cmbCarga != null)
-                cmbCarga.setItems(FXCollections.observableArrayList(cargaService.listarCargas()));
+                cmbCarga.setItems(FXCollections.observableArrayList(
+                        cargaService.listarCargasLivresCompativeis(v.getNavio().getTipoNavio().getId())));
+            if (cmbTanque != null)
+                cmbTanque.setItems(FXCollections.observableArrayList(cargaService.tanquesLivres(v)));
             if (tabelaTripulacaoViagem != null)
                 tabelaTripulacaoViagem.setItems(FXCollections.observableArrayList(
                         tripulacaoService.listarTripulacaoDaViagem(v.getId())));
             if (cmbTripulante != null)
                 cmbTripulante.setItems(FXCollections.observableArrayList(
                         tripulacaoService.listarTripulantesDisponiveis()));
+
+            // Só se mexe nas cargas enquanto a viagem está PLANEADA — desativa os controlos caso contrário.
+            boolean planeada = v.getEstado() == EstadoViagem.PLANEADA;
+            if (cmbCarga != null)           cmbCarga.setDisable(!planeada);
+            if (cmbTanque != null)          cmbTanque.setDisable(!planeada);
+            if (btnAssociarCarga != null)   btnAssociarCarga.setDisable(!planeada);
+            if (btnDesassociarCarga != null) btnDesassociarCarga.setDisable(!planeada);
         } catch (Exception e) { mostrarErro(e.getMessage()); }
     }
 
@@ -182,10 +198,12 @@ public class ViagemController implements Atualizavel {
     private void onAssociarCarga() {
         Viagem v = tabelaViagens.getSelectionModel().getSelectedItem();
         Carga c  = cmbCarga != null ? cmbCarga.getValue() : null;
+        Integer tanque = cmbTanque != null ? cmbTanque.getValue() : null;
         if (v == null) { mostrarErro("Selecione uma viagem."); return; }
         if (c == null) { mostrarErro("Selecione uma carga."); return; }
+        if (tanque == null) { mostrarErro("Selecione o compartimento (tanque)."); return; }
         try {
-            cargaService.associarCargaAViagem(v, c);
+            cargaService.associarCargaAViagem(v, c, tanque);
             onViagemSelecionada(v);
         } catch (Exception e) { mostrarErro(e.getMessage()); }
     }
@@ -195,8 +213,10 @@ public class ViagemController implements Atualizavel {
         Viagem v = tabelaViagens.getSelectionModel().getSelectedItem();
         Carga c  = tabelaCargasViagem != null ? tabelaCargasViagem.getSelectionModel().getSelectedItem() : null;
         if (v == null || c == null) { mostrarErro("Selecione a viagem e a carga."); return; }
-        cargaService.desassociarCargaDaViagem(v.getId(), c.getId());
-        onViagemSelecionada(v);
+        try {
+            cargaService.desassociarCargaDaViagem(v.getId(), c.getId());
+            onViagemSelecionada(v);
+        } catch (Exception e) { mostrarErro(e.getMessage()); }
     }
 
     // ── Associar Tripulação ────────────────────────────────────────────────────

@@ -23,6 +23,18 @@ public class CargaService {
     // ── CARGA CRUD ────────────────────────────────────────────────────────────
     public List<Carga> listarCargas() { return cargaDAO.listarTodos(); }
 
+    /** Cargas livres (sem viagem) — para a combo de associação a uma viagem. */
+    public List<Carga> listarCargasLivres() { return cargaDAO.listarSemViagem(); }
+
+    /** Cargas livres E compatíveis com o tipo de navio indicado (para a combo da viagem). */
+    public List<Carga> listarCargasLivresCompativeis(int idTipoNavio) {
+        List<Integer> tiposCompat = compatibilidadeDAO.listarCargasCompativeis(idTipoNavio)
+                .stream().map(TipoCarga::getId).collect(java.util.stream.Collectors.toList());
+        return cargaDAO.listarSemViagem().stream()
+                .filter(c -> c.getTipoCarga() != null && tiposCompat.contains(c.getTipoCarga().getId()))
+                .collect(java.util.stream.Collectors.toList());
+    }
+
     public List<Carga> listarCargasDaViagem(int idViagem) {
         return cargaDAO.listarPorViagem(idViagem);
     }
@@ -41,7 +53,12 @@ public class CargaService {
      * Regra 3: O número de cargas por viagem não pode exceder o máximo
      *          definido pelo tipo de navio.
      */
-    public void associarCargaAViagem(Viagem viagem, Carga carga) throws Exception {
+    public void associarCargaAViagem(Viagem viagem, Carga carga, int numeroTanque) throws Exception {
+        // Só se podem associar cargas enquanto a viagem está PLANEADA.
+        if (viagem.getEstado() != EstadoViagem.PLANEADA)
+            throw new Exception("Só é possível associar cargas a viagens no estado PLANEADA. "
+                    + "Esta viagem está " + viagem.getEstado() + ".");
+
         Navio navio = navioDAO.buscarPorId(viagem.getNavio().getId());
         if (navio == null) throw new Exception("Navio não encontrado.");
 
@@ -51,6 +68,13 @@ public class CargaService {
         if (!compativel)
             throw new Exception("Tipo de carga '" + carga.getTipoCarga().getNome() +
                     "' não é compatível com o tipo de navio '" + navio.getTipoNavio().getNome() + "'.");
+
+        // Regra do compartimento: tem de existir no navio e estar livre
+        if (numeroTanque < 1 || numeroTanque > navio.getNumCompartimentos())
+            throw new Exception("Compartimento inválido. Este navio tem " + navio.getNumCompartimentos() + " tanque(s).");
+        for (Carga c : cargaDAO.listarPorViagem(viagem.getId()))
+            if (c.getNumeroTanque() != null && c.getNumeroTanque() == numeroTanque)
+                throw new Exception("O compartimento " + numeroTanque + " já está ocupado nesta viagem.");
 
         // Regra 3 – número máximo de cargas por viagem (definido pelo tipo de navio)
         int maxCargas = navio.getTipoNavio().getMaxCargas();
@@ -67,7 +91,31 @@ public class CargaService {
                     "Capacidade excedida. Ocupado: %.1f t, Carga: %.1f t, Máximo: %.1f t.",
                     pesoAtual, carga.getPeso(), navio.getCapacidadeMaxima()));
 
-        cargaDAO.associarAViagem(viagem.getId(), carga.getId());
+        // Cria uma CÓPIA da carga para a viagem. A original fica no catálogo, reutilizável
+        // como "template" noutras viagens (e o histórico da viagem fica com a sua própria cópia).
+        // Opção 2: a cópia herda os portos da rota da viagem (origem -> carga, destino -> descarga).
+        // O template não tem portos; é a viagem que os define.
+        Carga copia = new Carga(0, carga.getDesignacao(), carga.getTipoCarga(),
+                carga.getVolume(), carga.getPeso(), viagem.getPortoOrigem(), viagem.getPortoDestino());
+        cargaDAO.inserir(copia);
+        cargaDAO.associarAViagem(viagem.getId(), copia.getId(), numeroTanque);
+    }
+
+    /** Números dos compartimentos ainda livres do navio desta viagem (para a combo). */
+    public List<Integer> tanquesLivres(Viagem viagem) {
+        Navio navio = navioDAO.buscarPorId(viagem.getNavio().getId());
+        java.util.Set<Integer> usados = new java.util.HashSet<>();
+        for (Carga c : cargaDAO.listarPorViagem(viagem.getId()))
+            if (c.getNumeroTanque() != null) usados.add(c.getNumeroTanque());
+        List<Integer> livres = new java.util.ArrayList<>();
+        for (int i = 1; i <= navio.getNumCompartimentos(); i++)
+            if (!usados.contains(i)) livres.add(i);
+        return livres;
+    }
+
+    /** Esvazia os compartimentos de uma viagem (cargas entregues) — usado ao concluir. */
+    public void esvaziarCompartimentos(int idViagem) {
+        cargaDAO.eliminarPorViagem(idViagem);
     }
 
     /**
@@ -80,7 +128,8 @@ public class CargaService {
     }
 
     public void desassociarCargaDaViagem(int idViagem, int idCarga) {
-        cargaDAO.desassociarDaViagem(idViagem, idCarga);
+        // A carga da viagem é uma cópia; remover = apagar essa cópia (o template fica no catálogo).
+        cargaDAO.eliminar(idCarga);
     }
 
     // ── COMPATIBILIDADE CRUD ──────────────────────────────────────────────────

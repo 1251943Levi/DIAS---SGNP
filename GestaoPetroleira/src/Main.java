@@ -35,9 +35,11 @@ public class Main extends Application {
             }
         });
 
-        Scene scene = new Scene(abas, 1100, 700);
+        Scene scene = new Scene(abas, 1400, 850);
         stage.setTitle("SGNP — Sistema de Gestão de Navios Petroleiros");
         stage.setScene(scene);
+        stage.setMinWidth(1000);
+        stage.setMinHeight(650);
         stage.show();
     }
 

@@ -51,30 +51,35 @@ public class ViagemService {
         if (dataChegada != null && dataChegada.isBefore(dataPartida))
             throw new Exception("A data de chegada não pode ser anterior à data de partida.");
 
+        // Regra: o navio só pode partir do porto onde se encontra (porto atual).
+        // Vai buscar o estado ATUAL à BD (a combo pode estar desatualizada).
+        // Se ainda não tem porto atual (acabado de criar), permite qualquer origem.
+        Navio navioAtual = navioDAO.buscarPorId(navio.getId());
+        Integer idPortoAtual = navioAtual != null ? navioAtual.getIdPortoAtual() : navio.getIdPortoAtual();
+        if (idPortoAtual != null && origem.getId() != idPortoAtual) {
+            Porto portoAtual = portoDAO.buscarPorId(idPortoAtual);
+            String nome = portoAtual != null ? portoAtual.getNome() : ("porto " + idPortoAtual);
+            throw new Exception("O navio encontra-se em " + nome + "; a viagem tem de partir desse porto.");
+        }
+
+        // Regra: a partida não pode ser antes da chegada da última viagem concluída do navio
+        // (o navio só fica disponível quando chega).
+        LocalDate ultimaChegada = null;
+        for (Viagem v2 : viagemDAO.listarPorNavio(navio.getId())) {
+            if (v2.getEstado() == EstadoViagem.CONCLUIDA && v2.getDataChegada() != null
+                    && (ultimaChegada == null || v2.getDataChegada().isAfter(ultimaChegada)))
+                ultimaChegada = v2.getDataChegada();
+        }
+        if (ultimaChegada != null && dataPartida.isBefore(ultimaChegada))
+            throw new Exception("O navio só ficou disponível em " + ultimaChegada
+                    + " (chegada da última viagem); a partida não pode ser anterior a essa data.");
+
         garantirSemViagemAtiva(navio.getId());
 
         Viagem v = new Viagem(0, navio, origem, destino, dataPartida, dataChegada, EstadoViagem.PLANEADA);
         viagemDAO.inserir(v);
-
-        // Gera automaticamente uma carga PENDENTE (peso 0), com um tipo compativel com o navio.
-        gerarCargaPendente(v);
-    }
-
-    /**
-     * Cria uma carga "pendente" (peso e volume a zero) associada a viagem, com um tipo de carga
-     * compativel com o tipo de navio. O utilizador preenche depois o peso na Gestao de Cargas.
-     * Os portos da carga herdam os da viagem.
-     */
-    private void gerarCargaPendente(Viagem v) {
-        List<TipoCarga> compativeis =
-                compatibilidadeDAO.listarCargasCompativeis(v.getNavio().getTipoNavio().getId());
-        if (compativeis.isEmpty()) return;   // sem compatibilidade definida -> nao gera
-
-        TipoCarga tipo = compativeis.get(0); // tipo compativel por defeito (utilizador pode alterar)
-        Carga pendente = new Carga(0, "Carga pendente - " + v.getNavio().getNome(), tipo, 0, 0,
-                v.getPortoOrigem(), v.getPortoDestino());
-        cargaDAO.inserir(pendente);
-        cargaDAO.associarAViagem(v.getId(), pendente.getId());
+        // (Modelo A) As cargas são associadas manualmente na aba Viagens, com as regras de
+        // compatibilidade/capacidade/máx. cargas — não há geração automática de carga pendente.
     }
 
     /** PLANEADA -> EM_CURSO (so se o navio estiver ATIVO e houver tripulacao com capitao). */
@@ -83,10 +88,10 @@ public class ViagemService {
         if (!viagem.getNavio().podeIniciarViagem())
             throw new Exception("O navio nao esta ATIVO e nao pode iniciar viagem.");
 
-        // Regra: a carga nao pode estar pendente (peso 0) e nao pode exceder a capacidade do navio.
+        // Regra: a viagem tem de ter cargas (com peso) e não pode exceder a capacidade do navio.
         double pesoTotal = cargaDAO.pesotalPorViagem(viagem.getId());
         if (pesoTotal <= 0)
-            throw new Exception("A carga ainda esta pendente (peso a zero). Preencha o peso da carga antes de iniciar.");
+            throw new Exception("A viagem não tem cargas associadas. Associe pelo menos uma carga antes de iniciar.");
         if (pesoTotal > viagem.getNavio().getCapacidadeMaxima())
             throw new Exception("A carga total (" + pesoTotal + " t) excede a capacidade do navio ("
                     + viagem.getNavio().getCapacidadeMaxima() + " t).");
@@ -117,6 +122,9 @@ public class ViagemService {
         // Viagem concluída: liberta a tripulação (fica disponível para novas viagens).
         // O navio fica também livre (viagens concluídas não contam como ativas).
         tripulacaoService.libertarTripulacao(viagem.getId());
+
+        // As cargas ficam guardadas na viagem como registo da entrega (histórico).
+        // Os tanques do navio ficam livres para a próxima viagem (que começa vazia).
     }
 
     /** PLANEADA/EM_CURSO -> CANCELADA. */
