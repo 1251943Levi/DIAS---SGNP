@@ -7,6 +7,7 @@ import dao.PortoDAO;
 import dao.TripulacaoViagemDAO;
 import dao.ViagemDAO;
 import model.Carga;
+import model.EstadoOperacional;
 import model.EstadoViagem;
 import model.Funcao;
 import model.Navio;
@@ -85,8 +86,17 @@ public class ViagemService {
     /** PLANEADA -> EM_CURSO (so se o navio estiver ATIVO e houver tripulacao com capitao). */
     public void iniciarViagem(Viagem viagem) throws Exception {
         validarTransicao(viagem.getEstado(), EstadoViagem.EM_CURSO);
-        if (!viagem.getNavio().podeIniciarViagem())
-            throw new Exception("O navio nao esta ATIVO e nao pode iniciar viagem.");
+        // A viagem só pode passar a EM_CURSO se o navio estiver ATIVO.
+        // 1) Verificação rápida com o estado conhecido (sem aceder à BD).
+        if (viagem.getNavio().getEstadoOperacional() != EstadoOperacional.ATIVO)
+            throw new Exception("O navio está " + viagem.getNavio().getEstadoOperacional()
+                    + "; só pode iniciar a viagem se estiver ATIVO.");
+        // 2) Reconfirma com o estado ATUAL na BD (pode ter mudado depois de a viagem
+        //    ter sido planeada — ex.: navio passou a INATIVO ou entrou em manutenção).
+        Navio navioAtual = navioDAO.buscarPorId(viagem.getNavio().getId());
+        if (navioAtual != null && navioAtual.getEstadoOperacional() != EstadoOperacional.ATIVO)
+            throw new Exception("O navio está " + navioAtual.getEstadoOperacional()
+                    + "; só pode iniciar a viagem se estiver ATIVO.");
 
         // Regra: a viagem tem de ter cargas (com peso) e não pode exceder a capacidade do navio.
         double pesoTotal = cargaDAO.pesotalPorViagem(viagem.getId());
@@ -115,7 +125,11 @@ public class ViagemService {
         viagem.setDataChegada(LocalDate.now());
         viagemDAO.atualizar(viagem);
 
-        Navio navio = viagem.getNavio();
+        // Atualiza o porto atual do navio para o destino. Vai buscar o navio FRESCO à BD
+        // (em vez de usar o objeto da tabela de viagens, que pode estar desatualizado) para
+        // não gravar por cima de edições entretanto feitas ao navio (capacidade, bandeira, etc.).
+        Navio navio = navioDAO.buscarPorId(viagem.getNavio().getId());
+        if (navio == null) navio = viagem.getNavio();
         navio.setIdPortoAtual(viagem.getPortoDestino().getId());
         navioDAO.atualizar(navio);
 

@@ -18,7 +18,20 @@ public class CargaService {
 
     public void adicionarTipoCarga(TipoCarga tc) { tipoCargaDAO.inserir(tc); }
 
-    public void eliminarTipoCarga(int id) { tipoCargaDAO.eliminar(id); }
+    public void eliminarTipoCarga(int id) throws Exception {
+        // Não permitir eliminar um tipo de carga em uso (cargas ou compatibilidades),
+        // senão a FK impede o DELETE com uma mensagem técnica pouco clara.
+        boolean usadoEmCargas = cargaDAO.listarTodos().stream()
+                .anyMatch(c -> c.getTipoCarga() != null && c.getTipoCarga().getId() == id);
+        if (usadoEmCargas)
+            throw new Exception("Não é possível eliminar: existem cargas deste tipo. Elimine-as primeiro.");
+        boolean usadoEmCompat = compatibilidadeDAO.listarTodos().stream()
+                .anyMatch(comp -> comp.getTipoCarga() != null && comp.getTipoCarga().getId() == id);
+        if (usadoEmCompat)
+            throw new Exception("Não é possível eliminar: este tipo de carga está em compatibilidades. "
+                    + "Remova as compatibilidades primeiro.");
+        tipoCargaDAO.eliminar(id);
+    }
 
     // ── CARGA CRUD ────────────────────────────────────────────────────────────
     public List<Carga> listarCargas() { return cargaDAO.listarTodos(); }
@@ -37,6 +50,11 @@ public class CargaService {
 
     public List<Carga> listarCargasDaViagem(int idViagem) {
         return cargaDAO.listarPorViagem(idViagem);
+    }
+
+    /** Histórico de entregas (cargas de viagens concluídas), só de leitura. */
+    public List<EntregaHistorico> listarHistoricoEntregas() {
+        return cargaDAO.listarHistoricoEntregas();
     }
 
     public void adicionarCarga(Carga carga) { cargaDAO.inserir(carga); }
@@ -70,7 +88,7 @@ public class CargaService {
                     "' não é compatível com o tipo de navio '" + navio.getTipoNavio().getNome() + "'.");
 
         // Regra do compartimento: tem de existir no navio e estar livre
-        if (numeroTanque < 1 || numeroTanque > navio.getNumCompartimentos())
+        if (!compartimentoValido(numeroTanque, navio.getNumCompartimentos()))
             throw new Exception("Compartimento inválido. Este navio tem " + navio.getNumCompartimentos() + " tanque(s).");
         for (Carga c : cargaDAO.listarPorViagem(viagem.getId()))
             if (c.getNumeroTanque() != null && c.getNumeroTanque() == numeroTanque)
@@ -86,7 +104,7 @@ public class CargaService {
 
         // Regra 2 – capacidade
         double pesoAtual = cargaDAO.pesotalPorViagem(viagem.getId());
-        if (pesoAtual + carga.getPeso() > navio.getCapacidadeMaxima())
+        if (capacidadeExcedida(pesoAtual, carga.getPeso(), navio.getCapacidadeMaxima()))
             throw new Exception(String.format(
                     "Capacidade excedida. Ocupado: %.1f t, Carga: %.1f t, Máximo: %.1f t.",
                     pesoAtual, carga.getPeso(), navio.getCapacidadeMaxima()));
@@ -127,25 +145,18 @@ public class CargaService {
         return maxCargas > 0 && cargasAtuais >= maxCargas;
     }
 
-    public void desassociarCargaDaViagem(int idViagem, int idCarga) {
-        // A carga da viagem é uma cópia; remover = apagar essa cópia (o template fica no catálogo).
-        cargaDAO.eliminar(idCarga);
+    /**
+     * Decide se um número de compartimento é válido para um navio com
+     * {@code numCompartimentos} tanques (tem de estar entre 1 e o total).
+     * Extraído como método puro para teste unitário sem base de dados.
+     */
+    static boolean compartimentoValido(int numeroTanque, int numCompartimentos) {
+        return numeroTanque >= 1 && numeroTanque <= numCompartimentos;
     }
 
-    // ── COMPATIBILIDADE CRUD ──────────────────────────────────────────────────
-    public List<Compatibilidade> listarCompatibilidades() {
-        return compatibilidadeDAO.listarTodos();
-    }
-
-    public List<TipoCarga> listarCargasCompativeis(int idTipoNavio) {
-        return compatibilidadeDAO.listarCargasCompativeis(idTipoNavio);
-    }
-
-    public void adicionarCompatibilidade(Compatibilidade comp) {
-        compatibilidadeDAO.inserir(comp);
-    }
-
-    public void eliminarCompatibilidade(int idTipoNavio, int idTipoCarga) {
-        compatibilidadeDAO.eliminar(idTipoNavio, idTipoCarga);
-    }
-}
+    /**
+     * Decide se associar uma carga excede a capacidade do navio: a soma do peso
+     * já ocupado com o peso da nova carga não pode ultrapassar a capacidade máxima.
+     * Extraído como método puro para teste unitário sem base de dados.
+     */
+    static boolean capacidadeExcedida(doub

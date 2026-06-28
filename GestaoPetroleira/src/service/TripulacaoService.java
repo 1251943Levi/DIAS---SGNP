@@ -47,7 +47,14 @@ public class TripulacaoService {
         }
     }
 
-    public void eliminarTripulante(int id) { tripulanteDAO.eliminar(id); }
+    public void eliminarTripulante(int id) throws Exception {
+        // Não permitir eliminar um tripulante com histórico de participação em viagens
+        // (a FK em TRIPULACAO_VIAGEM impediria o DELETE; aqui damos uma mensagem clara).
+        if (!tripulacaoViagemDAO.listarPorTripulante(id).isEmpty())
+            throw new Exception("Não é possível eliminar: o tripulante tem histórico de participação "
+                    + "em viagens. Desassocie-o das viagens primeiro.");
+        tripulanteDAO.eliminar(id);
+    }
 
     // ── ALOCAÇÃO ──────────────────────────────────────────────────────────────
 
@@ -81,14 +88,4 @@ public class TripulacaoService {
         return tripulacaoViagemDAO.listarPorViagem(idViagem);
     }
 
-    /** Verifica se a viagem tem pelo menos um capitão */
-    public boolean temCapitao(int idViagem) {
-        return listarTripulacaoDaViagem(idViagem).stream()
-                .anyMatch(tv -> tv.getFuncao() == Funcao.CAPITAO);
-    }
-
-    /** Historico de participacao em viagens de um tripulante. */
-    public List<TripulacaoViagem> historicoDoTripulante(int idTripulante) {
-        return tripulacaoViagemDAO.listarPorTripulante(idTripulante);
-    }
-}
+ 

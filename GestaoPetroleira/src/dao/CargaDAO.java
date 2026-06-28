@@ -134,6 +134,48 @@ public class CargaDAO {
         return 0;
     }
 
+    /**
+     * Histórico de entregas: cargas de viagens CONCLUIDA, com navio, percurso e datas.
+     * Só de leitura — alimenta a aba "Histórico". As cargas ficam na BD após a conclusão,
+     * por isso este histórico é simplesmente uma consulta sobre os dados já persistidos.
+     */
+    public List<model.EntregaHistorico> listarHistoricoEntregas() {
+        String sql =
+                "SELECT v.id_viagem, n.nome AS navio, c.designacao AS carga, " +
+                "tc.designacao AS tipo, c.peso, c.numero_tanque, " +
+                "pcar.nome AS porto_carga, pdes.nome AS porto_descarga, " +
+                "v.data_partida, v.data_chegada_prevista, v.estado " +
+                "FROM dias.CARGA c " +
+                "JOIN dias.VIAGEM v ON v.id_viagem = c.id_viagem " +
+                "JOIN dias.NAVIO n ON n.id_navio = v.id_navio " +
+                "JOIN dias.TIPO_CARGA tc ON tc.id_tipo_carga = c.id_tipo_carga " +
+                "LEFT JOIN dias.PORTO pcar ON pcar.id_porto = c.id_porto_carga " +
+                "LEFT JOIN dias.PORTO pdes ON pdes.id_porto = c.id_porto_descarga " +
+                "WHERE v.estado = 'CONCLUIDA' " +
+                "ORDER BY v.data_chegada_prevista DESC, v.id_viagem";
+        List<model.EntregaHistorico> lista = new ArrayList<>();
+        try (Connection c = db.getConn(); Statement st = c.createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+            while (rs.next()) {
+                int tanque = rs.getInt("numero_tanque");
+                String tanqueTxt = rs.wasNull() ? "—" : "Tanque " + tanque;
+                Date partida = rs.getDate("data_partida");
+                Date chegada = rs.getDate("data_chegada_prevista");
+                lista.add(new model.EntregaHistorico(
+                        rs.getInt("id_viagem"), rs.getString("navio"), rs.getString("carga"),
+                        rs.getString("tipo"), rs.getDouble("peso"), tanqueTxt,
+                        rs.getString("porto_carga") != null ? rs.getString("porto_carga") : "—",
+                        rs.getString("porto_descarga") != null ? rs.getString("porto_descarga") : "—",
+                        partida != null ? partida.toLocalDate().toString() : "—",
+                        chegada != null ? chegada.toLocalDate().toString() : "—",
+                        rs.getString("estado")));
+            }
+        } catch (Exception e) {
+            throw new DataAccessException("Erro ao aceder à base de dados (histórico): " + e.getMessage(), e);
+        }
+        return lista;
+    }
+
     private Carga mapear(ResultSet rs) throws Exception {
         TipoCarga tc = new TipoCarga(rs.getInt("id_tipo_carga"), rs.getString("tc_designacao"),
                 rs.getBoolean("inflamavel"), rs.getBoolean("corrosiva"), rs.getBoolean("toxica"));
