@@ -159,4 +159,29 @@ public class CargaService {
      * já ocupado com o peso da nova carga não pode ultrapassar a capacidade máxima.
      * Extraído como método puro para teste unitário sem base de dados.
      */
-    static boolean capacidadeExcedida(doub
+    static boolean capacidadeExcedida(double pesoOcupado, double pesoNovaCarga, double capacidadeMax) {
+        return pesoOcupado + pesoNovaCarga > capacidadeMax;
+    }
+
+    public void desassociarCargaDaViagem(int idViagem, int idCarga) {
+        // A carga da viagem é uma cópia; remover = apagar essa cópia (o template fica no catálogo).
+        cargaDAO.eliminar(idCarga);
+    }
+
+    // ── COMPATIBILIDADE CRUD ──────────────────────────────────────────────────
+    public List<Compatibilidade> listarCompatibilidades() {
+        return compatibilidadeDAO.listarTodos();
+    }
+
+    public List<TipoCarga> listarCargasCompativeis(int idTipoNavio) {
+        return compatibilidadeDAO.listarCargasCompativeis(idTipoNavio);
+    }
+
+    public void adicionarCompatibilidade(Compatibilidade comp) {
+        compatibilidadeDAO.inserir(comp);
+    }
+
+    public void eliminarCompatibilidade(int idTipoNavio, int idTipoCarga) {
+        compatibilidadeDAO.eliminar(idTipoNavio, idTipoCarga);
+    }
+}

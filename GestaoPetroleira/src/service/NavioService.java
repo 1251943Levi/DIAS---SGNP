@@ -83,4 +83,15 @@ public class NavioService {
     public void concluirManutencao(Manutencao manutencao) {
         manutencao.setDataFim(LocalDate.now());
         manutencaoDAO.atualizar(manutencao);
-        manutencao.getNavio().setEstadoOperacional(E
+        manutencao.getNavio().setEstadoOperacional(EstadoOperacional.ATIVO);
+        navioDAO.atualizar(manutencao.getNavio());
+    }
+
+    public void eliminarManutencao(int id) {
+        manutencaoDAO.eliminar(id);
+    }
+
+    public List<Manutencao> listarManutencoes(int idNavio) {
+        return manutencaoDAO.listarPorNavio(idNavio);
+    }
+}

@@ -88,4 +88,14 @@ public class TripulacaoService {
         return tripulacaoViagemDAO.listarPorViagem(idViagem);
     }
 
- 
+    /** Verifica se a viagem tem pelo menos um capitão */
+    public boolean temCapitao(int idViagem) {
+        return listarTripulacaoDaViagem(idViagem).stream()
+                .anyMatch(tv -> tv.getFuncao() == Funcao.CAPITAO);
+    }
+
+    /** Historico de participacao em viagens de um tripulante. */
+    public List<TripulacaoViagem> historicoDoTripulante(int idTripulante) {
+        return tripulacaoViagemDAO.listarPorTripulante(idTripulante);
+    }
+}
