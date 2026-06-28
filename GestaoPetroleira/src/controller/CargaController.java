@@ -1,6 +1,5 @@
 package controller;
 
-import dao.PortoDAO;
 import dao.TipoNavioDAO;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -34,15 +33,11 @@ public class CargaController implements Atualizavel {
     @FXML private TableColumn<Carga, String>  colCTipo;
     @FXML private TableColumn<Carga, Double>  colCPeso;
     @FXML private TableColumn<Carga, Double>  colCVolume;
-    @FXML private TableColumn<Carga, String>  colCPortoCarga;
-    @FXML private TableColumn<Carga, String>  colCPortoDesc;
 
     @FXML private TextField          txtDesignacao;
     @FXML private ComboBox<TipoCarga> cmbTipoCarga;
     @FXML private TextField          txtPeso;
     @FXML private TextField          txtVolume;
-    @FXML private ComboBox<Porto>    cmbPortoCarga;
-    @FXML private ComboBox<Porto>    cmbPortoDescarga;
     @FXML private TextField          txtPesquisaCarga;
 
     private final ObservableList<Carga> dadosCargas = FXCollections.observableArrayList();
@@ -56,7 +51,6 @@ public class CargaController implements Atualizavel {
     @FXML private ComboBox<TipoCarga> cmbTipoCargaCompat;
 
     private final CargaService cargaService = new CargaService();
-    private final PortoDAO portoDAO = new PortoDAO();
     private final TipoNavioDAO tipoNavioDAO = new TipoNavioDAO();
 
     @FXML
@@ -73,19 +67,12 @@ public class CargaController implements Atualizavel {
                 d.getValue().getTipoCarga() != null ? d.getValue().getTipoCarga().getNome() : "—"));
         colCPeso.setCellValueFactory(new PropertyValueFactory<>("peso"));
         colCVolume.setCellValueFactory(new PropertyValueFactory<>("volume"));
-        colCPortoCarga.setCellValueFactory(d -> new SimpleStringProperty(
-                d.getValue().getPortoCarga() != null ? d.getValue().getPortoCarga().getNome() : "—"));
-        colCPortoDesc.setCellValueFactory(d -> new SimpleStringProperty(
-                d.getValue().getPortoDescarga() != null ? d.getValue().getPortoDescarga().getNome() : "—"));
 
         // Compatibilidade
         colCompNavio.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getTipoNavio().getNome()));
         colCompCarga.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getTipoCarga().getNome()));
 
         // Combos
-        List<Porto> portos = portoDAO.listarTodos();
-        cmbPortoCarga.setItems(FXCollections.observableArrayList(portos));
-        cmbPortoDescarga.setItems(FXCollections.observableArrayList(portos));
         cmbTipoNavio.setItems(FXCollections.observableArrayList(tipoNavioDAO.listarTodos()));
 
         // Pesquisa/filtro sobre a tabela de cargas
@@ -99,18 +86,14 @@ public class CargaController implements Atualizavel {
         carregarCompatibilidades();
     }
 
-    /** Pesquisa, sem distinguir maiúsculas, em designação, tipo e portos de carga/descarga. */
+    /** Pesquisa, sem distinguir maiúsculas, em designação e tipo de carga. */
     private java.util.function.Predicate<Carga> cargaCorresponde(String texto) {
         String q = texto == null ? "" : texto.trim().toLowerCase();
         return c -> {
             if (q.isEmpty()) return true;
             String tipo = c.getTipoCarga() != null ? c.getTipoCarga().getNome() : "";
-            String pc = c.getPortoCarga() != null ? c.getPortoCarga().getNome() : "";
-            String pd = c.getPortoDescarga() != null ? c.getPortoDescarga().getNome() : "";
             return c.getDesignacao().toLowerCase().contains(q)
-                    || tipo.toLowerCase().contains(q)
-                    || pc.toLowerCase().contains(q)
-                    || pd.toLowerCase().contains(q);
+                    || tipo.toLowerCase().contains(q);
         };
     }
 
@@ -146,15 +129,11 @@ public class CargaController implements Atualizavel {
             String desig = txtDesignacao.getText().trim();
             if (desig.isEmpty()) throw new Exception("Insira a designação da carga.");
             if (cmbTipoCarga.getValue() == null) throw new Exception("Selecione o tipo de carga.");
-            if (cmbPortoCarga.getValue() == null || cmbPortoDescarga.getValue() == null)
-                throw new Exception("Selecione os portos de carga e descarga.");
             double peso   = Double.parseDouble(txtPeso.getText().trim());
             double volume = Double.parseDouble(txtVolume.getText().trim());
-            if (cmbPortoCarga.getValue().getId() == cmbPortoDescarga.getValue().getId())
-                throw new Exception("Porto de carga e descarga devem ser diferentes.");
 
-            Carga c = new Carga(0, desig, cmbTipoCarga.getValue(), volume, peso,
-                    cmbPortoCarga.getValue(), cmbPortoDescarga.getValue());
+            // Template sem portos: os portos são herdados da viagem ao associar.
+            Carga c = new Carga(0, desig, cmbTipoCarga.getValue(), volume, peso, null, null);
             cargaService.adicionarCarga(c);
             limparFormCarga();
             carregarCargas();
@@ -184,11 +163,6 @@ public class CargaController implements Atualizavel {
         cmbTipoCarga.setValue(sel.getTipoCarga());
         txtPeso.setText(String.valueOf(sel.getPeso()));
         txtVolume.setText(String.valueOf(sel.getVolume()));
-        cmbPortoCarga.setValue(sel.getPortoCarga());
-        cmbPortoDescarga.setValue(sel.getPortoDescarga());
-        // Portos da carga vêm da viagem (origem/destino) — não se alteram ao editar
-        cmbPortoCarga.setDisable(true);
-        cmbPortoDescarga.setDisable(true);
     }
 
     /** Atualiza a carga selecionada (usado para preencher o peso de uma carga pendente). */
@@ -200,19 +174,13 @@ public class CargaController implements Atualizavel {
             String desig = txtDesignacao.getText().trim();
             if (desig.isEmpty()) throw new Exception("Insira a designação da carga.");
             if (cmbTipoCarga.getValue() == null) throw new Exception("Selecione o tipo de carga.");
-            if (cmbPortoCarga.getValue() == null || cmbPortoDescarga.getValue() == null)
-                throw new Exception("Selecione os portos de carga e descarga.");
             double peso   = Double.parseDouble(txtPeso.getText().trim());
             double volume = Double.parseDouble(txtVolume.getText().trim());
-            if (cmbPortoCarga.getValue().getId() == cmbPortoDescarga.getValue().getId())
-                throw new Exception("Porto de carga e descarga devem ser diferentes.");
 
             sel.setDesignacao(desig);
             sel.setTipoCarga(cmbTipoCarga.getValue());
             sel.setPeso(peso);
             sel.setVolume(volume);
-            sel.setPortoCarga(cmbPortoCarga.getValue());
-            sel.setPortoDescarga(cmbPortoDescarga.getValue());
             cargaService.atualizarCarga(sel);
             limparFormCarga();
             carregarCargas();
@@ -255,27 +223,29 @@ public class CargaController implements Atualizavel {
     }
 
     private void carregarCargas() {
-        dadosCargas.setAll(cargaService.listarCargas());
+        // Catálogo = cargas "template" (ainda sem viagem). As cópias por viagem veem-se nas Viagens.
+        dadosCargas.setAll(cargaService.listarCargasLivres());
     }
 
     private void carregarCompatibilidades() {
         tabelaCompat.setItems(FXCollections.observableArrayList(cargaService.listarCompatibilidades()));
     }
 
+    /** Limpa o formulário e a seleção — para começar uma carga nova. */
+    @FXML
+    private void onLimparCarga() {
+        limparFormCarga();
+        tabelaCargas.getSelectionModel().clearSelection();
+    }
+
     private void limparFormCarga() {
         txtDesignacao.clear(); txtPeso.clear(); txtVolume.clear();
-        cmbTipoCarga.setValue(null); cmbPortoCarga.setValue(null); cmbPortoDescarga.setValue(null);
-        // Liberta os portos para uma nova carga manual
-        cmbPortoCarga.setDisable(false);
-        cmbPortoDescarga.setDisable(false);
+        cmbTipoCarga.setValue(null);
     }
 
     /** Chamado pelo Main ao abrir a aba Cargas: recarrega tudo (apanha cargas pendentes novas). */
     @Override
     public void atualizar() {
-        List<Porto> portos = portoDAO.listarTodos();
-        cmbPortoCarga.setItems(FXCollections.observableArrayList(portos));
-        cmbPortoDescarga.setItems(FXCollections.observableArrayList(portos));
         cmbTipoNavio.setItems(FXCollections.observableArrayList(tipoNavioDAO.listarTodos()));
         carregarTiposCarga();
         carregarCargas();

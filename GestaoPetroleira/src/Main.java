@@ -19,7 +19,8 @@ public class Main extends Application {
                 criarAba("Navios",     "/resources/view/NaviosView.fxml"),
                 criarAba("Viagens",    "/resources/view/ViagemView.fxml"),
                 criarAba("Cargas",     "/resources/view/CargasView.fxml"),
-                criarAba("Tripulação", "/resources/view/TripulacaoView.fxml")
+                criarAba("Tripulação", "/resources/view/TripulacaoView.fxml"),
+                criarAba("Histórico",  "/resources/view/HistoricoView.fxml")
         );
 
         // Ao mudar de aba, refresca os dados se o controller suportar (interface Atualizavel)
@@ -35,9 +36,11 @@ public class Main extends Application {
             }
         });
 
-        Scene scene = new Scene(abas, 1100, 700);
+        Scene scene = new Scene(abas, 1400, 850);
         stage.setTitle("SGNP — Sistema de Gestão de Navios Petroleiros");
         stage.setScene(scene);
+        stage.setMinWidth(1000);
+        stage.setMinHeight(650);
         stage.show();
     }
 

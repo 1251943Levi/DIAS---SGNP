@@ -38,4 +38,45 @@ class CargaServiceTest {
         // maxCargas <= 0 significa "sem limite"
         assertFalse(CargaService.limiteCargasAtingido(0, 10));
     }
+
+    // ── Regra do compartimento (tanque) ──────────────────────────────────────
+
+    @Test
+    void compartimentoDentroDoIntervaloEhValido() {
+        // navio com 4 tanques -> 1 e 4 sao validos
+        assertTrue(CargaService.compartimentoValido(1, 4));
+        assertTrue(CargaService.compartimentoValido(4, 4));
+    }
+
+    @Test
+    void compartimentoZeroOuNegativoEhInvalido() {
+        assertFalse(CargaService.compartimentoValido(0, 4));
+        assertFalse(CargaService.compartimentoValido(-1, 4));
+    }
+
+    @Test
+    void compartimentoAcimaDoTotalEhInvalido() {
+        // navio so tem 4 tanques -> o 5 nao existe
+        assertFalse(CargaService.compartimentoValido(5, 4));
+    }
+
+    // ── Regra da capacidade ──────────────────────────────────────────────────
+
+    @Test
+    void cargaQueCabeNaoExcedeCapacidade() {
+        // ocupado 100 t, nova 50 t, maximo 200 t -> cabe
+        assertFalse(CargaService.capacidadeExcedida(100, 50, 200));
+    }
+
+    @Test
+    void cargaExatamenteNoLimiteNaoExcede() {
+        // 150 + 50 = 200, maximo 200 -> ainda cabe (nao ultrapassa)
+        assertFalse(CargaService.capacidadeExcedida(150, 50, 200));
+    }
+
+    @Test
+    void cargaQueUltrapassaExcedeCapacidade() {
+        // 180 + 50 = 230 > 200 -> excede
+        assertTrue(CargaService.capacidadeExcedida(180, 50, 200));
+    }
 }

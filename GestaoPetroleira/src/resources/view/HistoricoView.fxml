@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="controller.HistoricoController">
+  <top>
+    <Label text="Histórico de Entregas" style="-fx-font-size:18;-fx-padding:10;"/>
+  </top>
+
+  <center>
+    <VBox spacing="8" style="-fx-padding:10;">
+      <HBox spacing="8" alignment="CENTER_LEFT">
+        <Label text="Pesquisar:"/>
+        <TextField fx:id="txtPesquisa" promptText="navio, carga, tipo, percurso ou nº de viagem..." prefWidth="360"/>
+        <Label fx:id="lblTotal" text="0 entrega(s)" style="-fx-text-fill:#666;"/>
+      </HBox>
+
+      <TableView fx:id="tabela" VBox.vgrow="ALWAYS">
+        <columns>
+          <TableColumn fx:id="colViagem"        text="Viagem"         prefWidth="60"/>
+          <TableColumn fx:id="colNavio"         text="Navio"          prefWidth="150"/>
+          <TableColumn fx:id="colCarga"         text="Carga"          prefWidth="160"/>
+          <TableColumn fx:id="colTipo"          text="Tipo"           prefWidth="120"/>
+          <TableColumn fx:id="colPeso"          text="Peso (t)"       prefWidth="80"/>
+          <TableColumn fx:id="colTanque"        text="Compartimento"  prefWidth="110"/>
+          <TableColumn fx:id="colPortoCarga"    text="Porto Carga"    prefWidth="130"/>
+          <TableColumn fx:id="colPortoDescarga" text="Porto Descarga" prefWidth="130"/>
+          <TableColumn fx:id="colPartida"       text="Partida"        prefWidth="100"/>
+          <TableColumn fx:id="colChegada"       text="Chegada"        prefWidth="100"/>
+        </columns>
+      </TableView>
+
+      <Label text="Mostra as cargas entregues em viagens concluídas. Só de leitura."
+             style="-fx-text-fill:#666;-fx-font-size:11;"/>
+    </VBox>
+  </center>
+</BorderPane>

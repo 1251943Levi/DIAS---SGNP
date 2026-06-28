@@ -8,6 +8,7 @@ public class Carga {
     private double peso;
     private Porto portoCarga;
     private Porto portoDescarga;
+    private Integer numeroTanque;   // tanque do navio que esta carga ocupa (null = sem tanque/sem viagem)
 
     public Carga() {}
     public Carga(int id, String designacao, TipoCarga tipoCarga,
@@ -24,6 +25,7 @@ public class Carga {
     public double getPeso() { return peso; } public void setPeso(double v) { peso = v; }
     public Porto getPortoCarga() { return portoCarga; } public void setPortoCarga(Porto v) { portoCarga = v; }
     public Porto getPortoDescarga() { return portoDescarga; } public void setPortoDescarga(Porto v) { portoDescarga = v; }
+    public Integer getNumeroTanque() { return numeroTanque; } public void setNumeroTanque(Integer v) { numeroTanque = v; }
 
     @Override public String toString() {
         return designacao + " (" + (tipoCarga != null ? tipoCarga.getNome() : "?") + ", " + peso + " t)";
